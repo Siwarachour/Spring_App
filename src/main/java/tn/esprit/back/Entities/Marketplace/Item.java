@@ -22,8 +22,7 @@ public class Item {
     private String description;
     private BigDecimal price;
     private ItemCategory category;
-    @ElementCollection
-    private List<String> images;  // Liste des URLs des images
+
     private ItemStatus status;  // Enum pour l'état de l'article (AVAILABLE, SOLD)
 
     @ManyToOne
