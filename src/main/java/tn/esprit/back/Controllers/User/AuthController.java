@@ -32,7 +32,6 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final tn.esprit.back.Repository.User.roleRepository roleRepository;
 
-
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
         // Vérifier si l'utilisateur existe déjà
