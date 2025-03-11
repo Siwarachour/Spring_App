@@ -3,9 +3,12 @@ package tn.esprit.back.Entities.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import tn.esprit.back.Entities.Marketplace.Item;
+import tn.esprit.back.Entities.Marketplace.Transaction;
 import tn.esprit.back.Entities.Role.Role;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -37,9 +40,14 @@ public class User {
     //private String role;
 
     @ManyToMany(cascade = CascadeType.PERSIST)
-
     private Set<Role> roles;
+    // Liste des articles mis en vente par l'utilisateur
+    @OneToMany(mappedBy = "seller")
+    private List<Item> itemsForSale;
 
+    // Liste des transactions effectuées par l'utilisateur en tant qu'acheteur
+    @OneToMany(mappedBy = "buyer")
+    private List<Transaction> purchases;
 
 /*
     @CreatedDate

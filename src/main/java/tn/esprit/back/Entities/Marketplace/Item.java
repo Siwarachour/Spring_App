@@ -1,9 +1,7 @@
 package tn.esprit.back.Entities.Marketplace;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import tn.esprit.back.Entities.User.User;
 
 import java.math.BigDecimal;
@@ -11,28 +9,47 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
+// ENUM POUR CATEGORY
+enum Category {
+    BOOKS, PROJECTS, RESOURCES, ELECTRONICS, OTHERS;
+}
+
+// ENTITY : ITEM (ARTICLE)
 @Entity
-@Table(name = "item")
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String title;
-    private String description;
-    private BigDecimal price;
-    private ItemCategory category;
 
-    private ItemStatus status;  // Enum pour l'état de l'article (AVAILABLE, SOLD)
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    private BigDecimal price;
+
+    @Enumerated(EnumType.STRING)
+    private Category category;
+
+    @ElementCollection
+    private List<String> images;
+
 
     @ManyToOne
-    @JoinColumn(name = "seller_id")
-    private User seller;  // Relation Many-to-One avec l'utilisateur (vendeur)
+    @JoinColumn(name = "seller_email", referencedColumnName = "email", nullable = true)
+    private User seller;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt;
-    @Temporal(TemporalType.TIMESTAMP)
+    @Enumerated(EnumType.STRING)
+    private ItemStatus status;
 
-    private Date updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
 
+// ENUM POUR STATUS DE L'ITEM
+enum ItemStatus {
+    AVAILABLE, SOLD, UNAVAILABLE;
 }
