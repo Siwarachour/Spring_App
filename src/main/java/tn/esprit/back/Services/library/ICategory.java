@@ -12,4 +12,5 @@ public interface ICategory {
     Category getCategoryById(long idCategory);
 
 
+    Category addDocumentsToCategory(Long categoryId, List<Long> documentIds);
 }

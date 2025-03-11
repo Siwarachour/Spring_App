@@ -16,22 +16,18 @@ public class ReviewService implements IReview {
     public Review addReview(Review review) {
         return reviewRepository.save(review);
     }
-
     @Override
     public Review updateReview(Review review) {
         return reviewRepository.save(review);
     }
-
     @Override
     public void deleteReview(long idReview) {
         reviewRepository.deleteById(idReview);
     }
-
     @Override
     public List<Review> getAllReview() {
         return (List<Review>) reviewRepository.findAll();
     }
-
     @Override
     public Review getReviewById(long idReview) {
         Optional<Review> review = reviewRepository.findById(idReview);

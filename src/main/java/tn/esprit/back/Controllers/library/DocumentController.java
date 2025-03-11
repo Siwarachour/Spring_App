@@ -1,5 +1,6 @@
 package tn.esprit.back.Controllers.library;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.back.Entities.library.Document;
 import tn.esprit.back.Services.library.IDocument;
@@ -17,24 +18,33 @@ public class DocumentController {
     public Document updateDocument(@RequestBody Document document) {
         return documentService.updateDocument(document);
     }
-
     @PostMapping("/add")
     public Document addDocument(@RequestBody Document document) {
         return documentService.addDocument(document);
     }
-
     @GetMapping("/getall")
     public List<Document> getAllDocument() {
         return documentService.getAllDocument();
     }
-
     @GetMapping("/retrieve/{idDocument}")
     public Document getDocumentById(@PathVariable long idDocument) {
         return documentService.getDocumentById(idDocument);
     }
-
     @DeleteMapping("/delete/{idDocument}")
     public void deleteDocument(@PathVariable long idDocument) {
         documentService.deleteDocument(idDocument);
+    }
+
+
+
+
+
+    @PutMapping("/affectReview/{idDocument}/{idReview}")
+    public Document affectReviewToDocument(@PathVariable Long idDocument, @PathVariable Long idReview) {
+        return documentService.assignReviewToDocument(idDocument, idReview);
+    }
+    @PutMapping("/affectCategory/{idDocument}/{idCategory}")
+    public Document affectCategoryToDocument(@PathVariable Long idDocument, @PathVariable Long idCategory) {
+        return documentService.addDocumentToCategory(idDocument, idCategory);
     }
 }

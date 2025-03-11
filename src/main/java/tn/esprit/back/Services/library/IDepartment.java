@@ -11,4 +11,5 @@ public interface IDepartment {
     Department getDepartmentById(long idDepartment);
 
 
+    //Department assignUsersToDepartment(Long departmentId, List<Long> userIds);
 }

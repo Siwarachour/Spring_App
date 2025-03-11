@@ -2,8 +2,13 @@ package tn.esprit.back.Services.library;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import tn.esprit.back.Entities.library.Category;
 import tn.esprit.back.Entities.library.Document;
+import tn.esprit.back.Entities.library.Review;
+import tn.esprit.back.Repository.library.CategoryRepository;
 import tn.esprit.back.Repository.library.DocumentRepository;
+import tn.esprit.back.Repository.library.ReviewRepository;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -12,30 +17,49 @@ public class DocumentService implements IDocument {
 
     @Autowired
     DocumentRepository documentRepository;
+    @Autowired
+    ReviewRepository reviewRepository;
+    @Autowired
+    CategoryRepository categoryRepository;
 
     @Override
     public Document addDocument(Document document) {
         return documentRepository.save(document);
     }
-
     @Override
     public Document updateDocument(Document document) {
         return documentRepository.save(document);
     }
-
     @Override
     public void deleteDocument(long idDocument) {
         documentRepository.deleteById(idDocument);
     }
-
     @Override
     public List<Document> getAllDocument() {
         return documentRepository.findAll();
     }
-
     @Override
     public Document getDocumentById(long idDocument) {
         Optional<Document> document = documentRepository.findById(idDocument);
         return document.orElse(null);
+    }
+
+
+
+   @Override
+    public Document assignReviewToDocument(Long documentId, Long reviewId) {
+        Document document = documentRepository.findById(documentId).orElseThrow();
+        Review review = reviewRepository.findById(reviewId).orElseThrow();
+        document.setReview(review);
+        review.setDocument(document);
+        reviewRepository.save(review);
+        return documentRepository.save(document);
+    }
+    @Override
+    public Document addDocumentToCategory(Long documentId, Long categoryId) {
+        Document document = documentRepository.findById(documentId).orElseThrow();
+        Category category = categoryRepository.findById(categoryId).orElseThrow();
+        document.getCategories().add(category);
+        return documentRepository.save(document);
     }
 }
