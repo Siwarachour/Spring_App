@@ -13,7 +13,7 @@ import java.util.List;
 public class Document {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long idDocument;
     private String title;
     private String description;
     @Enumerated(EnumType.STRING)
