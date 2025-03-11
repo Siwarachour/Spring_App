@@ -38,7 +38,10 @@ public class DocumentController {
 
 
 
-
+    @PostMapping("/addWithUser/{userId}")
+    public Document addDocumentWithUser(@RequestBody Document document, @PathVariable Long userId) {
+        return documentService.addDocumentWithUser(document, userId);
+    }
     @PutMapping("/affectReview/{idDocument}/{idReview}")
     public Document affectReviewToDocument(@PathVariable Long idDocument, @PathVariable Long idReview) {
         return documentService.assignReviewToDocument(idDocument, idReview);

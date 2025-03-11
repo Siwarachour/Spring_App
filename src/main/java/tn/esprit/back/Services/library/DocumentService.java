@@ -2,9 +2,11 @@ package tn.esprit.back.Services.library;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Entities.library.Category;
 import tn.esprit.back.Entities.library.Document;
 import tn.esprit.back.Entities.library.Review;
+import tn.esprit.back.Repository.User.UserRepository;
 import tn.esprit.back.Repository.library.CategoryRepository;
 import tn.esprit.back.Repository.library.DocumentRepository;
 import tn.esprit.back.Repository.library.ReviewRepository;
@@ -21,6 +23,8 @@ public class DocumentService implements IDocument {
     ReviewRepository reviewRepository;
     @Autowired
     CategoryRepository categoryRepository;
+    @Autowired
+    UserRepository userRepository;
 
     @Override
     public Document addDocument(Document document) {
@@ -46,7 +50,13 @@ public class DocumentService implements IDocument {
 
 
 
-   @Override
+    @Override
+    public Document addDocumentWithUser(Document document, Long userId) {
+        User user = userRepository.findById(Math.toIntExact(userId)).orElseThrow(() -> new RuntimeException("User not found"));
+        document.setStudent(user);
+        return documentRepository.save(document);
+    }
+    @Override
     public Document assignReviewToDocument(Long documentId, Long reviewId) {
         Document document = documentRepository.findById(documentId).orElseThrow();
         Review review = reviewRepository.findById(reviewId).orElseThrow();

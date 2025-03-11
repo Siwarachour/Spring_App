@@ -10,6 +10,9 @@ public interface IDocument {
     void deleteDocument(long idDocument );
     List<Document> getAllDocument();
     Document getDocumentById(long idDocument);
+
+    Document addDocumentWithUser(Document document, Long userId);
+
     Document assignReviewToDocument(Long documentId, Long reviewId);
 
     Document addDocumentToCategory(Long documentId, Long categoryId);
