@@ -5,4 +5,6 @@ import tn.esprit.back.Entities.User.User;
 
 public interface UserRepository extends JpaRepository<User, Integer> {
     User findByusername(String username);
+    User findByEmail(String email);
+
 }
