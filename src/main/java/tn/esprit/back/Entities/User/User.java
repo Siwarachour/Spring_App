@@ -3,6 +3,8 @@ package tn.esprit.back.Entities.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import tn.esprit.back.Entities.Application.Application;
+import tn.esprit.back.Entities.Offre.Offre;
 import tn.esprit.back.Entities.Role.Role;
 
 import java.util.Date;
@@ -40,7 +42,11 @@ public class User {
 
     private Set<Role> roles;
 
+     @OneToMany(mappedBy = "rh", cascade = CascadeType.ALL)
+    private Set<Offre> offres;
 
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
+    private Set<Application> applications;
 /*
     @CreatedDate
     @Column(nullable = false, updatable = false)
