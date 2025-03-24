@@ -21,7 +21,7 @@ public class Application {
  @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-
+//gfd
  @ManyToOne
  User student;
 
