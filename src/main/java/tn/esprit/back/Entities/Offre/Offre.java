@@ -30,6 +30,8 @@ public class Offre {
     @Column(insertable = false)
     private Integer createdBy;
 
+    @ManyToOne
+    private User rh;
 
     @OneToMany(mappedBy = "offre", cascade = CascadeType.ALL)  // mappedBy points to the "offre" field in the Application entity
     private Set<Application> applications;

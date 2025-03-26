@@ -62,23 +62,32 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User user) {
         try {
-            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
-                    if (authentication.isAuthenticated()) {
-                        Map<String, Object> authData = new HashMap<>();
-                        authData.put("token", jwtUtils.generateToken(user.getUsername()));
-                        authData.put("tupe", "Bearer");
-                        return ResponseEntity.ok(authData);
-                    }return ResponseEntity.badRequest().body("Invalid username or password");
-    }catch (AuthenticationException e){
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
+
+            if (authentication.isAuthenticated()) {
+                // Print only the username of the authenticated user
+                String username = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
+                System.out.println("Authenticated User: " + username);
+
+                Map<String, Object> authData = new HashMap<>();
+                authData.put("token", jwtUtils.generateToken(user.getUsername()));
+                authData.put("type", "Bearer");
+
+                return ResponseEntity.ok(authData);
+            }
+            return ResponseEntity.badRequest().body("Invalid username or password");
+        } catch (AuthenticationException e) {
             log.error(e.getMessage());
             return ResponseEntity.badRequest().body("Invalid username or password");
         }
-}
+    }
 
 
-        @GetMapping("/welcome")
-        public String welcome(OAuth2AuthenticationToken authentication) {
-            return "Bienvenue, " + authentication.getPrincipal().getAttribute("name") + "!";
-        }
+
+    @GetMapping("/welcome")
+    public String welcome(OAuth2AuthenticationToken authentication) {
+        return "Bienvenue, " + authentication.getPrincipal().getAttribute("name") + "!";
+    }
 
 }

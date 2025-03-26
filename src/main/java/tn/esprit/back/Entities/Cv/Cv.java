@@ -5,6 +5,7 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import tn.esprit.back.Entities.User.User;
 
 import java.util.List;
 @EntityListeners(AuditingEntityListener.class)
@@ -31,6 +32,8 @@ public class Cv {
 
     private String education;
 
+@OneToOne
+    User student;
     @CreatedBy
     @Column(insertable = false, updatable = false)  // Ensure this is only set on creation
     private String createdBy;

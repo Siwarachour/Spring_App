@@ -1,0 +1,13 @@
+services:
+  mail-dev:
+    container_name: mail-dev
+    image: maildev/maildev
+    ports:
+      - 1080:1080
+
+
+
+
+  netwwork:
+    name: mail-network
+    driver: bridge

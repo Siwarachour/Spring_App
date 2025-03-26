@@ -26,7 +26,7 @@ public class Application {
  @ManyToOne
  User student;
 
-
+private String motivatedlettre;
 
      @ManyToOne
      Offre offre;

@@ -2,10 +2,8 @@ package tn.esprit.back.Entities.Cv;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/cv")
@@ -14,8 +12,10 @@ public class CvController {
 
     private final CvService cvService;
 @PostMapping   ("/add")
-    public ResponseEntity <Integer> addCv(@RequestBody Cv cv) {
-        return ResponseEntity.ok((Integer) cvService.addCv(cv));
+    public ResponseEntity <Integer> addCv(@RequestBody Cv cv, Authentication connecteduser) {
+        return ResponseEntity.ok((Integer) cvService.addCv(cv,connecteduser));
     }
+
+
 
 }
