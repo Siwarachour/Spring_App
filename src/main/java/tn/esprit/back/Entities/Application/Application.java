@@ -2,6 +2,7 @@ package tn.esprit.back.Entities.Application;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import tn.esprit.back.Entities.Cv.Cv;
 import tn.esprit.back.Entities.Feedback.Feedback;
@@ -39,5 +40,7 @@ public class Application {
      @OneToOne
      Cv cv;
 
-
+    @CreatedBy
+    @Column(insertable = false)
+    private Integer createdBy;
 }

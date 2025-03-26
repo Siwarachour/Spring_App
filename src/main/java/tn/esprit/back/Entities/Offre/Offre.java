@@ -2,6 +2,7 @@ package tn.esprit.back.Entities.Offre;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import tn.esprit.back.Entities.Application.Application;
 import tn.esprit.back.Entities.User.User;
@@ -25,10 +26,13 @@ public class Offre {
 
     private String skills;
 
-    @ManyToOne
-    User rh;
+    @CreatedBy
+    @Column(insertable = false)
+    private Integer createdBy;
 
 
     @OneToMany(mappedBy = "offre", cascade = CascadeType.ALL)  // mappedBy points to the "offre" field in the Application entity
     private Set<Application> applications;
+
+
 }

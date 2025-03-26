@@ -3,12 +3,19 @@ package tn.esprit.back.Entities.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import tn.esprit.back.Entities.Application.Application;
 import tn.esprit.back.Entities.Offre.Offre;
 import tn.esprit.back.Entities.Role.Role;
 
+import javax.security.auth.Subject;
+import java.security.Principal;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -19,7 +26,7 @@ import java.util.Set;
 @Table(name = "user")
 @EntityListeners(AuditingEntityListener.class)
 @Data
-public class User {
+public class User implements UserDetails , Principal {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,17 +49,39 @@ public class User {
 
     private Set<Role> roles;
 
-     @OneToMany(mappedBy = "rh", cascade = CascadeType.ALL)
-    private Set<Offre> offres;
 
-    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
-    private Set<Application> applications;
-/*
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdDate;
-    @LastModifiedDate
-    @Column(insertable = false)
-    private LocalDateTime lastmodifiedDate;*/
+    @Override
 
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return this.roles.stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName().toString())) // Ensure you get the string representation
+                .collect(Collectors.toList());
+    }
+
+
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return UserDetails.super.isAccountNonExpired();
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return UserDetails.super.isAccountNonLocked();
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return UserDetails.super.isCredentialsNonExpired();
+    }
+
+    @Override
+    public String getName() {
+        return username;
+    }
+
+    @Override
+    public boolean implies(Subject subject) {
+        return Principal.super.implies(subject);
+    }
 }

@@ -31,13 +31,9 @@ public class Cv {
 
     private String education;
 
-
     @CreatedBy
-    @Column(insertable = false)
-    private Integer createdBy;
-    @LastModifiedDate
-    @Column(insertable = false)
-    private Integer LastModifiedBy;
+    @Column(insertable = false, updatable = false)  // Ensure this is only set on creation
+    private String createdBy;
 
 
 }
