@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 public class CvController {
 
     private final CvService cvService;
-@PostMapping   ("/add")
+    @PostMapping   ("/add")
     public ResponseEntity <Integer> addCv(@RequestBody Cv cv, Authentication connecteduser) {
         return ResponseEntity.ok((Integer) cvService.addCv(cv,connecteduser));
     }

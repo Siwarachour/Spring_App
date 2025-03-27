@@ -8,10 +8,10 @@ import tn.esprit.back.Entities.Application.Application;
 import tn.esprit.back.Entities.User.User;
 
 import java.util.Set;
+
 @EntityListeners(AuditingEntityListener.class)
 @Builder
 @Entity
-@NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
@@ -33,8 +33,17 @@ public class Offre {
     @ManyToOne
     private User rh;
 
-    @OneToMany(mappedBy = "offre", cascade = CascadeType.ALL)  // mappedBy points to the "offre" field in the Application entity
+    public void setRh(User rh) {
+        this.rh = rh;
+    }
+
+    // Allow applications to be nullable
+    @OneToMany(mappedBy = "offre", cascade = CascadeType.ALL)
     private Set<Application> applications;
 
+    // You can add a default constructor if needed (default empty set for applications)
+    public Offre() {
+        this.applications = null; // Allow applications to be null initially
+    }
 
 }

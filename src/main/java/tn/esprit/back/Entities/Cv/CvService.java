@@ -11,14 +11,14 @@ import tn.esprit.back.Repository.User.UserRepository;
 @Service
 public class CvService {
     private final CvRepo cvRepo;
-   private final UserRepository userRepository;
+    private final UserRepository userRepository;
 
 
     public Object addCv(Cv cv, Authentication connecteduser) {
         // Retrieve the authentication details from the SecurityContext
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
-
+        System.out.println(username);
         // Retrieve the user from the UserRepository based on the username
         User user = userRepository.findByusername(username); // Assuming your UserRepository has a method to find by username
 

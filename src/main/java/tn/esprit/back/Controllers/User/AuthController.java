@@ -7,6 +7,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
@@ -67,6 +68,9 @@ public class AuthController {
 
             if (authentication.isAuthenticated()) {
                 // Print only the username of the authenticated user
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                // Print the username of the authenticated user
                 String username = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
                 System.out.println("Authenticated User: " + username);
 
@@ -82,6 +86,8 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Invalid username or password");
         }
     }
+
+
 
 
 
