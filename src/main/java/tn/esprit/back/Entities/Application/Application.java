@@ -1,4 +1,6 @@
 package tn.esprit.back.Entities.Application;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -23,21 +25,28 @@ public class Application {
     private int id;
 
 //gfd
- @ManyToOne
- User student;
+@ManyToOne
+@JsonIgnore
+private User student;
 
-private String motivatedlettre;
+
+    private String motivatedlettre;
 
      @ManyToOne
+     @JsonIgnore
      Offre offre;
 
      @Enumerated(EnumType.STRING)
      ApplicationStatus status;
 
-@OneToOne(cascade = CascadeType.ALL)
-     Feedback feedback;
+    @OneToOne( optional = true)
+    private Feedback feedback;
+    @JsonGetter("studentId")  // This will be the name of the field in the JSON response
+    public Integer getStudentId() {
+        return student != null ? student.getId() : null;
+    }
 
-     @OneToOne
+    @OneToOne
      Cv cv;
 
     @CreatedBy
