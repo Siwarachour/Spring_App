@@ -45,15 +45,16 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))  // Remplace "cors()" avec la nouvelle méthode
                 .csrf(csrf -> csrf.disable())  // Remplace "csrf()" avec la nouvelle méthode
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/**", "/oauth2/**").permitAll() // Permet l'accès aux routes d'authentification sans authentification
+                        .requestMatchers("/api/auth/users/{id}/roles").hasRole("ADMIN")
                         .anyRequest().authenticated() // Toutes les autres requêtes nécessitent une authentification
                 )
                 .addFilterBefore(new JwtFilter(customUserDetailsService, jwtUtils), UsernamePasswordAuthenticationFilter.class); // Ajout du filtre JWT
 
         return httpSecurity.build();
     }
-
     // Bean pour configurer CORS (Cross-Origin Resource Sharing)
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {

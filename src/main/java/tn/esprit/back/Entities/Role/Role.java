@@ -32,9 +32,19 @@ public class Role {
     @Column(unique = true, nullable = false)
     private RoleName name;
 
+    public int getId() {
+        return id;
+    }
 
+    public List<User> getUsers() {
+        return users;
+    }
 
- /*   @CreatedDate
+    public RoleName getName() {
+        return name;
+    }
+
+/*   @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdDate;
     @LastModifiedDate

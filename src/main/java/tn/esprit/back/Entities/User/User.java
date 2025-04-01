@@ -17,6 +17,7 @@ import java.util.Set;
 @Table(name = "user")
 @EntityListeners(AuditingEntityListener.class)
 @Data
+
 public class User {
 
     @Id

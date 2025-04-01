@@ -19,11 +19,12 @@ public class CorsConfig {
             logger.info("🚀 CORS filter initialized!"); // 🔹 Message pour vérifier si la classe est exécutée
 
             CorsConfiguration config = new CorsConfiguration();
-            config.setAllowedOrigins(List.of("*"));
+
         config.setAllowedOrigins(List.of("http://localhost:4200"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
+            config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+
+            config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
