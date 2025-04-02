@@ -7,13 +7,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import tn.esprit.back.Services.User.CustomUserDetailsService;
 import tn.esprit.back.filter.JwtFilter;
 
@@ -22,74 +19,55 @@ import java.util.Arrays;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class SecurityConfig implements WebMvcConfigurer {
+public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtUtils jwtUtils;
 
-    // Bean for password encoding
+    // Bean pour l'encodeur de mot de passe
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Bean for authentication manager
+    // Bean pour l'AuthenticationManager
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity httpSecurity, PasswordEncoder passwordEncoder, CustomUserDetailsService customUserDetailsService) throws Exception {
+    public AuthenticationManager authenticationManager(HttpSecurity httpSecurity) throws Exception {
         AuthenticationManagerBuilder authenticationManagerBuilder = httpSecurity.getSharedObject(AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder.userDetailsService(customUserDetailsService).passwordEncoder(passwordEncoder);
+        authenticationManagerBuilder.userDetailsService(customUserDetailsService).passwordEncoder(passwordEncoder());
         return authenticationManagerBuilder.build();
     }
 
-    // Security filter chain with JWT filter and security rules
+    // Bean pour configurer la sécurité des requêtes HTTP
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        return httpSecurity
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))  // Using the CORS configuration bean
-                .csrf(AbstractHttpConfigurer::disable)  // Disable CSRF protection for APIs
+        httpSecurity
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))  // Remplace "cors()" avec la nouvelle méthode
+                .csrf(csrf -> csrf.disable())  // Remplace "csrf()" avec la nouvelle méthode
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/auth/register").permitAll()
+                        .requestMatchers("/api/auth/**", "/oauth2/**").permitAll() // Permet l'accès aux routes d'authentification sans authentification
+                        .requestMatchers("/api/auth/users/{id}/roles").hasRole("ADMIN")
                         .requestMatchers("/login", "/oauth2/**", "/auth/**", "/application/**", "/offre/add").permitAll()  // Allow public access to these endpoints
-                        .anyRequest().authenticated()  // Secure all other endpoints
-                )
-                .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("/welcome", true)  // Redirection after successful login
-                )
-                .addFilterBefore(new JwtFilter(customUserDetailsService, jwtUtils), UsernamePasswordAuthenticationFilter.class)  // Add JWT filter
-                .build();
-    }
 
-    // CORS configuration for global settings
+                        .anyRequest().authenticated() // Toutes les autres requêtes nécessitent une authentification
+                )
+                .addFilterBefore(new JwtFilter(customUserDetailsService, jwtUtils), UsernamePasswordAuthenticationFilter.class); // Ajout du filtre JWT
+
+        return httpSecurity.build();
+    }
+    // Bean pour configurer CORS (Cross-Origin Resource Sharing)
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         var configuration = new org.springframework.web.cors.CorsConfiguration();
-
-        // ✅ Allow frontend (localhost:4200) to interact with backend
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "https://accounts.google.com"));
-
-        // ✅ Allow necessary HTTP methods (especially OPTIONS for preflight)
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-        // ✅ Allow necessary headers (include Authorization for OAuth)
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Origin", "X-Requested-With", "Accept"));
-
-        // ✅ Allow credentials (cookies, tokens)
-        configuration.setAllowCredentials(true);
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200")); // Origine autorisée (CORS)
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Méthodes autorisées
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type")); // En-têtes autorisés
+        configuration.setAllowCredentials(true); // Permet d'envoyer des informations d'identification
 
         var source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
-
-        // ✅ Apply CORS configuration globally (for all routes)
-        source.registerCorsConfiguration("/**", configuration);
-
+        source.registerCorsConfiguration("/**", configuration); // Applique cette configuration CORS à toutes les URL
         return source;
-    }
-
-    // This CORS method might be redundant now as we've moved CORS configuration to the filter chain.
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins("http://localhost:4200")  // Angular frontend URL
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")  // Allowed HTTP methods
-                .allowedHeaders("*")  // Allow all headers
-                .allowCredentials(true);  // Allow credentials like cookies or tokens
     }
 }

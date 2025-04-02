@@ -1,6 +1,5 @@
 package tn.esprit.back.configurations;
 
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -12,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -23,23 +23,29 @@ public class JwtUtils {
     @Value("${app.expiration-time}")
     private int expirationTime;
 
-    public String generateToken(String username) {
+    // Modifié pour accepter les rôles
+    // Modifié pour accepter les rôles
+    public String generateToken(String username, List<String> roles) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims,username);
+        claims.put("roles", roles); // Ajout des rôles dans les claims
+
+        String token = createToken(claims, username);
+
+        // Imprimer le token généré pour vérifier son contenu
+        System.out.println("Generated token: " + token);
+
+        return token;
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
-
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
-                .signWith(getSignKey(),SignatureAlgorithm.HS512)
+                .signWith(getSignKey(), SignatureAlgorithm.HS512)
                 .compact();
-
     }
-
 
     private Key getSignKey() {
         // Générer une clé secrète sécurisée de 512 bits pour HS512
@@ -49,8 +55,6 @@ public class JwtUtils {
     public boolean validateToken(String token, UserDetails userDetails) {
         String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !tisTokenExpired(token));
-
-
     }
 
     private boolean tisTokenExpired(String token) {
@@ -60,14 +64,19 @@ public class JwtUtils {
     private Date extractExpirationDate(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
+
     public String extractUsername(String token) {
-        return  extractClaim(token, Claims::getSubject);
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    // Méthode pour extraire les rôles du token
+    public List<String> extractRoles(String token) {
+        return extractClaim(token, claims -> (List<String>) claims.get("roles"));
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token) ;
+        final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
-
     }
 
     private Claims extractAllClaims(String token) {
