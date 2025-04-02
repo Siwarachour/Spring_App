@@ -46,9 +46,9 @@ return  authenticationManagerBuilder.build();
                         .requestMatchers("/login", "/oauth2/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .oauth2Login(oauth2 -> oauth2
+               /* .oauth2Login(oauth2 -> oauth2
                         .defaultSuccessUrl("/welcome", true) // Redirection après succès
-                )
+                ) */
                 .addFilterBefore(new JwtFilter(custonuserDetailsService, jwtUtils), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

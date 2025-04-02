@@ -34,4 +34,21 @@ public class CoursController {
         coursService.deleteCours(idcours);
         return null;
     }
+    @PutMapping("/affectCertificatToCours/{idCours}/{idCertificat}")
+    Cours affectCertificatToCours(@PathVariable long idCours, @PathVariable long idCertificat) {
+        return coursService.affectCertificatToCours(idCours, idCertificat);
+    }
+    @PostMapping("/addCoursAndAffectCertificat/{idCertificat}")
+    Cours addCoursAndAffectCertificat(@RequestBody Cours cours, @PathVariable long idCertificat) {
+        return coursService.addCoursAndAffectCertificat(cours, idCertificat);
+    }
+
+    @PutMapping("/affectTestToCours/{idCours}/{idTest}")
+    Cours affectTestToCours(@PathVariable long idCours, @PathVariable long idTest) {
+        return coursService.affectTestToCours(idCours, idTest);
+    }
+    @PostMapping("/addCoursAndAffectTest/{idTest}")
+    Cours addCoursAndAffectTest(@RequestBody Cours cours, @PathVariable long idTest) {
+        return coursService.addCoursAndAffectTest(cours, idTest);
+    }
 }

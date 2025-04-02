@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import tn.esprit.back.Entities.Role.Role;
+import tn.esprit.back.Entities.coursCertificat.Cours;
 
 import java.util.Date;
 import java.util.Set;
@@ -39,6 +40,9 @@ public class User {
     @ManyToMany(cascade = CascadeType.PERSIST)
 
     private Set<Role> roles;
+
+    @ManyToMany(cascade = CascadeType.ALL)
+    private Set<Cours> cours;
 
 
 /*
