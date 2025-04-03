@@ -16,6 +16,7 @@ import tn.esprit.back.Services.User.CustomUserDetailsService;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class JwtFilter extends OncePerRequestFilter {
@@ -39,18 +40,23 @@ public class JwtFilter extends OncePerRequestFilter {
             UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
 
             if (jwtUtils.validateToken(token, userDetails)) {
-                // Extraire les rôles depuis le token JWT
-                Collection<SimpleGrantedAuthority> roles = jwtUtils.extractRoles(token).stream()
-                        .map(role -> new SimpleGrantedAuthority(role))
-                        .collect(Collectors.toList());
+                // Extraire le rôle unique du token
+                String role = jwtUtils.extractRole(token);
 
-                // Si le token est valide, on crée un objet d'authentification et on l'associe au contexte de sécurité
+                // Vérifier que le rôle n'est pas null avant de créer l'autorité
+                Collection<SimpleGrantedAuthority> roles = (role != null)
+                        ? List.of(new SimpleGrantedAuthority(role))
+                        : List.of();
+
+                // Créer l'objet d'authentification avec un seul rôle
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(userDetails, null, roles);
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
+                // Assigner l'authentification au contexte de sécurité
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
+
         } else {
             handleJwtException(response, "Invalid or expired token");
         }
