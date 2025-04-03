@@ -19,42 +19,39 @@ import java.util.Set;
 @Entity
 @Table(name = "user")
 @EntityListeners(AuditingEntityListener.class)
-@Data
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @Column(unique = true, nullable = false)
     private String username;
+
     private String password;
     private String firstName;
     private String lastName;
-    @Column(unique = true)
+
+    @Column(unique = true, nullable = false)
     private String email;
+
     private String phone;
     private String address;
+
     @Temporal(TemporalType.DATE)
     private Date birthday;
+
     private boolean enabled;
     private boolean accountLocked;
-    //private String role;
 
-    @ManyToMany(cascade = CascadeType.PERSIST)
+    @ManyToMany
+    @JoinTable(name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles;
-    // Liste des articles mis en vente par l'utilisateur
-    @OneToMany(mappedBy = "seller")
+
+    @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Item> itemsForSale;
 
-    // Liste des transactions effectuées par l'utilisateur en tant qu'acheteur
-    @OneToMany(mappedBy = "buyer")
+    @OneToMany(mappedBy = "buyer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Transaction> purchases;
-
-/*
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdDate;
-    @LastModifiedDate
-    @Column(insertable = false)
-    private LocalDateTime lastmodifiedDate;*/
-
 }
