@@ -10,12 +10,16 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.back.Entities.Role.Role;
 import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Repository.User.UserRepository;
+import tn.esprit.back.Requests.JwtResponce;
+import tn.esprit.back.Requests.LoginRequests;
 import tn.esprit.back.Services.User.RoleService;
 import tn.esprit.back.configurations.JwtUtils;
 
@@ -76,81 +80,93 @@ public class AuthController {
 
         Map<String, String> response = new HashMap<>();
 
+        // Check if the username already exists
         if (userRepository.findByusername(user.getUsername()) != null) {
             response.put("error", "Username is already in use");
             return ResponseEntity.badRequest().body(response);
         }
 
+        // Check if the email already exists
         if (userRepository.findByEmail(user.getEmail()) != null) {
             response.put("error", "Email is already in use");
             return ResponseEntity.badRequest().body(response);
         }
 
-        // Vérification des rôles
-        Set<Role> roles = new HashSet<>();
-        for (Role role : user.getRoles()) {
-            Role existingRole = roleRepository.findById(role.getId()).orElse(null);
-            if (existingRole != null) {
-                roles.add(existingRole);
-            } else {
-                log.error("Role avec ID {} introuvable", role.getId());
-                response.put("error", "Role with id " + role.getId() + " not found");
-                return ResponseEntity.badRequest().body(response);
-            }
-        }
-
-        if (roles.isEmpty()) {
-            response.put("error", "At least one valid role must be provided.");
+        // Check if the role is provided (not null)
+        if (user.getRole() == null) {
+            response.put("error", "Role is required");
             return ResponseEntity.badRequest().body(response);
         }
 
-        user.setRoles(roles);
+        // Vérification du rôle unique
+        Role existingRole = roleRepository.findById(user.getRole().getId()).orElse(null);
+        if (existingRole == null) {
+            response.put("error", "Role with id " + user.getRole().getId() + " not found");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Associer le rôle unique à l'utilisateur
+        user.setRole(existingRole);
+        // Encode the password before saving
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
+        // Save the user
         userRepository.save(user);
+
+        // Respond with a success message
         response.put("message", "User registered successfully!");
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/user-info")
+    public ResponseEntity<?> getUserInfo() {
+        // Access the currently authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
+        if (authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            User user = userRepository.findByusername(username); // Fetch the user object using the username
+            return ResponseEntity.ok(user);  // Return user data as needed
+        }
+
+        return ResponseEntity.status(403).body("User not authenticated");
+    }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User user) {
-        System.out.println("Login request received for username: " + user.getUsername());
-
-        try {
-            // Authentification avec UsernamePasswordAuthenticationToken
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
-            );
-
-            // Vérification si l'authentification est réussie
-            if (authentication.isAuthenticated()) {
-                // Récupère les rôles de l'utilisateur
-                List<String> roles = getUserRoles(user.getUsername()); // Remplace par ta logique réelle
-
-                // Génère le token avec les rôles
-                String token = jwtUtils.generateToken(user.getUsername(), roles);
-
-                // Prépare la réponse avec le token et le type Bearer
-                Map<String, Object> authData = new HashMap<>();
-                authData.put("token", token);
-                authData.put("type", "Bearer");
-
-                return ResponseEntity.ok(authData);
-            } else {
-                return ResponseEntity.badRequest().body("Invalid username or password");
-            }
-        } catch (AuthenticationException e) {
-            log.error("Authentication failed: {}", e.getMessage());
-            return ResponseEntity.badRequest().body("Invalid username or password");
+    public ResponseEntity<?> login(@RequestBody LoginRequests loginRequest) {
+        // Vérifier si l'utilisateur existe dans la base de données
+        User user = userRepository.findByusername(loginRequest.getUsername());
+        if (user == null) {
+            return ResponseEntity.status(401).body("User not found");
         }
+
+        // Récupérer le rôle de l'utilisateur (un seul rôle)
+        String role = user.getRole().getName().toString(); // Assurez-vous que 'getRole()' retourne un seul rôle
+
+        // Générer un token JWT avec le rôle unique
+        String token = jwtUtils.generateToken(user.getUsername(), role);
+        System.out.println(user.getUsername() + " " + role);
+
+        // After generating the token, set the user authentication in the SecurityContextHolder
+        // Create an Authentication object
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                user.getUsername(), null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
+        );
+
+        // Set authentication in the security context
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // Return the token in the response
+        return ResponseEntity.ok(new JwtResponce(token));
     }
+
+
+
 
     // Méthode fictive pour récupérer les rôles de l'utilisateur
     private List<String> getUserRoles(String username) {
         // Ici, tu devras récupérer les rôles depuis la base de données ou ton service d'authentification
-        return List.of("ROLE_USER", "ROLE_ADMIN"); // A adapter selon ta logique
+        return List.of("ROLE_ADMIN"); // A adapter selon ta logique
     }
 
 
@@ -162,7 +178,6 @@ public class AuthController {
     public String welcome(OAuth2AuthenticationToken authentication) {
         return "Bienvenue, " + authentication.getPrincipal().getAttribute("name") + "!";
     }
-
     @GetMapping("/api/auth/users/{id}/roles")
     public ResponseEntity<?> getRolesForUser(@PathVariable int id) {
         // Récupérer l'utilisateur par son ID
@@ -173,14 +188,19 @@ public class AuthController {
 
         User user = userOptional.get();
 
-        // Extraire les noms des rôles (en tant que chaînes de caractères)
-        List<Role> roles = new ArrayList<>(user.getRoles());
-        List<String> roleNames = roles.stream()
-                .map(role -> role.getName().toString())  // Conversion de l'énumération en chaîne de caractères
-                .collect(Collectors.toList());
+        // Récupérer le rôle de l'utilisateur (un seul rôle)
+        Role role = user.getRole(); // Ici, vous récupérez un seul rôle, pas une liste.
 
-        return ResponseEntity.ok(roleNames); // Renvoie les rôles sous forme de List<String>
+        if (role == null) {
+            return ResponseEntity.noContent().build(); // Optionnel: Retourner 204 si aucun rôle trouvé
+        }
+
+        // Extraire le nom du rôle (en tant que chaîne de caractères)
+        String roleName = role.getName().toString();  // Conversion de l'énumération en chaîne de caractères
+
+        return ResponseEntity.ok(roleName); // Renvoie le rôle sous forme de String
     }
+
 
 
 

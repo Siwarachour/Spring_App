@@ -41,11 +41,14 @@ public class User implements UserDetails, Principal {
     private String address;
     @Temporal(TemporalType.DATE)
     private Date birthday;
-
     private boolean enabled = true; // Default to true for new users
     private boolean accountLocked = false;
-    @ManyToMany(cascade = CascadeType.PERSIST)
-    private Set<Role> roles;
+
+
+    @ManyToOne
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
+
 
     @OneToMany
     private Set<Offre> offres;

@@ -24,12 +24,12 @@ public class Role {
     private int id;
 
 
-    @ManyToMany(mappedBy = "roles")
+    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<User> users;
 
     @Enumerated(EnumType.STRING)
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = true)
     private RoleName name;
 
     public int getId() {
@@ -43,6 +43,20 @@ public class Role {
     public RoleName getName() {
         return name;
     }
+
+    public void setUsers(List<User> users) {
+        this.users = users;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setName(RoleName name) {
+        this.name = name;
+    }
+
+
 
 /*   @CreatedDate
     @Column(nullable = false, updatable = false)

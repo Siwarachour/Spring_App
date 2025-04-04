@@ -14,7 +14,6 @@ public class CorsConfig {
     private static final Logger logger = LoggerFactory.getLogger(CorsConfig.class); // 🔹 Déclaration du logger
 
 
-    @Bean
     public CorsFilter corsFilter() {
         logger.info("🚀 CORS filter initialized!"); // 🔹 Message pour vérifier si la classe est exécutée
 
