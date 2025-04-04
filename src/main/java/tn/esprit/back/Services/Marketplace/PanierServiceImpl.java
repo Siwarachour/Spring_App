@@ -4,8 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tn.esprit.back.Entities.Marketplace.Item;
 import tn.esprit.back.Entities.Marketplace.Panier;
+import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Repository.Marketplace.ItemRepository;
 import tn.esprit.back.Repository.Marketplace.PanierRepository;
+import tn.esprit.back.Repository.User.UserRepository;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -14,13 +16,15 @@ import java.util.Optional;
 public class PanierServiceImpl implements PanierService {
     @Autowired
     private PanierRepository panierRepository;
-
+    @Autowired
+    private UserRepository userRepository;
     @Autowired
     private ItemRepository itemRepository;
 
     @Override
     public Panier ajouterPanier(Panier panier) {
         return panierRepository.save(panier);
+
     }
 
     @Override

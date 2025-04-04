@@ -3,9 +3,12 @@ package tn.esprit.back.Entities.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import tn.esprit.back.Entities.Marketplace.Item;
+import tn.esprit.back.Entities.Marketplace.Transaction;
 import tn.esprit.back.Entities.Role.Role;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 
@@ -18,24 +21,40 @@ import java.util.Set;
 
 
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @Column(unique = true, nullable = false)
     private String username;
+
     private String password;
     private String firstName;
     private String lastName;
-    @Column(unique = true)
+
+    @Column(unique = true, nullable = false)
     private String email;
+
     private String phone;
     private String address;
+
     @Temporal(TemporalType.DATE)
     private Date birthday;
+
+    private boolean enabled;
+    private boolean accountLocked;
     private boolean enabled = true; // Default to true for new users
     private boolean accountLocked = false;
     //private String role;
 
+    @ManyToMany
+    @JoinTable(name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<Role> roles;
+
+    @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Item> itemsForSale;
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
@@ -80,6 +99,8 @@ public class User {
         return enabled;
     }
 
+    @OneToMany(mappedBy = "buyer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Transaction> purchases;
     public boolean isAccountLocked() {
         return accountLocked;
     }

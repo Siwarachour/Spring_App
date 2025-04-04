@@ -21,11 +21,9 @@ public class Panier {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-    @OneToOne
-    @JoinColumn(name = "user_email", referencedColumnName = "email", nullable = false)
-    private User user;
-
+    // On stocke uniquement l'email de l'utilisateur
+    @Column(nullable = false)
+    private String userEmail;
     @OneToMany
     private List<Item> items;
 

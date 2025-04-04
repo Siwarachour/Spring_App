@@ -42,6 +42,9 @@ public class Transaction {
 
     public void setValidee(boolean b) {
     }
+
+    public void setStatus(tn.esprit.back.Services.Marketplace.TransactionStatus transactionStatus) {
+    }
 }
 
 // ENUM POUR STATUS DE TRANSACTION

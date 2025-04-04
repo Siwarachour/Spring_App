@@ -3,7 +3,9 @@ package tn.esprit.back.Services.Marketplace;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tn.esprit.back.Entities.Marketplace.Item;
+import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Repository.Marketplace.ItemRepository;
+import tn.esprit.back.Repository.User.UserRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,9 +14,20 @@ import java.util.Optional;
 public class ItemServiceImpl implements IItemService{
     @Autowired
     private ItemRepository itemRepository;
-
+    @Autowired
+private UserRepository userRepository;
     @Override
     public Item ajouterItem(Item item) {
+        if (item.getSeller() != null) {
+            Optional<User> existingSeller = userRepository.findByEmail(item.getSeller().getEmail());
+
+            if (existingSeller.isPresent()) {
+                item.setSeller(existingSeller.get()); // Associer l'utilisateur existant
+            } else {
+                throw new RuntimeException("Le vendeur avec l'email " + item.getSeller().getEmail() + " n'existe pas !");
+            }
+        }
+
         return itemRepository.save(item);
     }
 
