@@ -20,6 +20,8 @@ public class JwtUtils {
     @Value("${app.secret-key}")
     private String secretKey;
 
+
+
     @Value("${app.expiration-time}")
     private int expirationTime;
 
@@ -48,6 +50,17 @@ public class JwtUtils {
         return Keys.secretKeyFor(SignatureAlgorithm.HS512); // Clé secrète de 512 bits
     }
 
+    public boolean validateTokenn(String token) {
+        try {
+            String username = extractUsername(token);  // Extract username from token
+            return !isTokenExpired(token); // Check expiration
+        } catch (Exception e) {
+            return false;  // Return false if there's any issue with the token (e.g., invalid signature or expired)
+        }
+    }
+
+
+
     // Valider le token avec les informations de l'utilisateur
     public boolean validateToken(String token, UserDetails userDetails) {
         String username = extractUsername(token); // Extraire le nom d'utilisateur du token
@@ -57,6 +70,15 @@ public class JwtUtils {
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token)
                 && userDetails.getAuthorities().stream().anyMatch(authority -> roleFromToken.equals(authority.getAuthority())));
     }
+
+   /* public Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey.getBytes())  // Clé secrète
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }*/
+
 
     // Vérifier si le token est expiré
     private boolean isTokenExpired(String token) {
@@ -75,8 +97,11 @@ public class JwtUtils {
 
     // Extraire le rôle du token
     public String extractRole(String token) {
-        return extractClaim(token, claims -> (String) claims.get("role")); // Extraire le rôle en tant que String
+        String role = extractClaim(token, claims -> (String) claims.get("role"));
+        System.out.println("🔍 Rôle extrait du token : " + role); // LOG POUR DEBUG
+        return role;
     }
+
 
     // Extraire des informations spécifiques des claims du token
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -85,7 +110,7 @@ public class JwtUtils {
     }
 
     // Extraire tous les claims du token
-    private Claims extractAllClaims(String token) {
+   private Claims extractAllClaims(String token) {
         return Jwts.parser() // Analyser le token
                 .setSigningKey(getSignKey()) // Définir la clé de signature
                 .parseClaimsJws(token) // Analyser les claims du token

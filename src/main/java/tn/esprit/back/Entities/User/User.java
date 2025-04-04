@@ -45,6 +45,9 @@ public class User {
     private boolean accountLocked;
     private boolean enabled = true; // Default to true for new users
     private boolean accountLocked = false;
+    @Column(nullable = true)
+    private String resetToken;
+
     //private String role;
 
     @ManyToMany
@@ -58,6 +61,14 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
+
+    public String getResetToken() {
+        return resetToken;
+    }
+
+    public void setResetToken(String resetToken) {
+        this.resetToken = resetToken;
+    }
 
     public int getId() {
         return id;

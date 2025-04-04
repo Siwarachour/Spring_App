@@ -1,10 +1,15 @@
 package tn.esprit.back.Controllers.User;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import tn.esprit.back.Entities.Role.Role;
 import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Repository.User.UserRepository;
+import tn.esprit.back.Requests.ForgotPasswordRequest;
 import tn.esprit.back.Requests.JwtResponce;
 import tn.esprit.back.Requests.LoginRequests;
 import tn.esprit.back.Services.User.RoleService;
@@ -35,11 +41,18 @@ public class AuthController {
 
     @Autowired
     private final RoleService roleService;  // Service pour gérer les rôles
+    @Autowired
+    private final PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private final JwtUtils jwtUtils;
+
+    @Autowired
+    private final JavaMailSender mailSender;
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtils jwtUtils;
+
+
     private final AuthenticationManager authenticationManager;
     private final tn.esprit.back.Repository.User.roleRepository roleRepository;
 
@@ -107,8 +120,8 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequests loginRequest) {
         // Vérifier si l'utilisateur existe dans la base de données
         User user = userRepository.findByusername(loginRequest.getUsername());
-        if (user == null) {
-            return ResponseEntity.status(401).body("User not found");
+        if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            return ResponseEntity.status(401).body("Invalid username or password");
         }
 
         // Récupérer le rôle de l'utilisateur (un seul rôle)
@@ -122,18 +135,10 @@ public class AuthController {
     }
 
 
-    // Méthode fictive pour récupérer les rôles de l'utilisateur
-    private List<String> getUserRoles(String username) {
-        // Ici, tu devras récupérer les rôles depuis la base de données ou ton service d'authentification
-        return List.of("ROLE_ADMIN"); // A adapter selon ta logique
-    }
 
 
 
-
-
-
-        @GetMapping("/welcome")
+    @GetMapping("/welcome")
         public String welcome(OAuth2AuthenticationToken authentication) {
             return "Bienvenue, " + authentication.getPrincipal().getAttribute("name") + "!";
         }
@@ -161,7 +166,64 @@ public class AuthController {
     }
 
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        String email = request.getEmail();
 
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Email not found"));
+        }
+
+        // Générer un token et l'associer à l'utilisateur
+        String token = UUID.randomUUID().toString();
+        user.setResetToken(token);
+        userRepository.save(user);
+
+        // Envoi de l'email avec le lien de réinitialisation
+        String resetLink = "http://localhost:4200/reset-password?token=" + token;
+        sendResetPasswordEmail(user.getEmail(), resetLink);
+
+        return ResponseEntity.ok(Collections.singletonMap("message", "Reset email sent successfully"));
+    }
+
+    private void sendResetPasswordEmail(String recipientEmail, String resetLink) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(recipientEmail);
+            helper.setSubject("Reset Your Password");
+            helper.setText("Click on the following link to reset your password: " + resetLink, true);
+
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("Error sending reset password email", e);
+        }
+    }
+
+    @PostMapping("/resetPassword")
+    public ResponseEntity<?> resetPassword(@RequestParam String resetToken, @RequestParam String newPassword) {
+        // Recherche de l'utilisateur par son resetToken
+        Optional<User> userOptional = userRepository.findByResetToken(resetToken);
+
+        // Vérifier si l'utilisateur existe
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();  // Récupère l'objet User de l'Optional
+
+            // Mettre à jour le mot de passe
+            user.setPassword(passwordEncoder.encode(newPassword));  // Encoder le nouveau mot de passe
+
+            // Sauvegarder l'utilisateur avec le nouveau mot de passe
+            userRepository.save(user);
+
+            // Retourner une réponse
+            return ResponseEntity.ok("Mot de passe réinitialisé avec succès !");
+        } else {
+            // Si aucun utilisateur n'a ce token, retourner une erreur
+            return ResponseEntity.status(404).body("Token de réinitialisation invalide ou expiré");
+        }
+    }
 
 
 }
