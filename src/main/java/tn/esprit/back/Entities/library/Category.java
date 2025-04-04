@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.util.ArrayList;
 import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 
 @Entity
@@ -17,7 +17,7 @@ public class Category {
     private String name;
     private String description;
 
-
+    @JsonIgnore
     @ManyToMany(mappedBy = "categories")
     private List<Document> documents = new ArrayList<>();
 }

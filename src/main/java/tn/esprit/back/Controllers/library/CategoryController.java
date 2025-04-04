@@ -5,10 +5,12 @@ import org.springframework.web.bind.annotation.*;
 import tn.esprit.back.Entities.library.Category;
 import tn.esprit.back.Services.library.ICategory;
 import java.util.List;
-
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/category")  // Base URL for Category
+@CrossOrigin(origins = "http://localhost:4200/", maxAge = 3600)
 public class CategoryController {
 
     @Autowired
