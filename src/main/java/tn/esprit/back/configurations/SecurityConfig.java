@@ -49,8 +49,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/**", "/oauth2/**").permitAll() // Permet l'accès aux routes d'authentification sans authentification
                         .requestMatchers("/api/auth/users/{id}/roles").hasRole("ADMIN")
-                                .requestMatchers("/api/auth/resetPassword").permitAll()
-                       // .requestMatchers("/api/auth/user").authenticated() // Assurez-vous que la route est accessible
+                        .requestMatchers("/api/auth/resetPassword").permitAll()
+                        // .requestMatchers("/api/auth/user").authenticated() // Assurez-vous que la route est accessible
 
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")  // Seuls les ADMIN peuvent accéder aux ressources sous /api/admin
                         .requestMatchers("/api/client/**").hasRole("CLIENT")  // Seuls les CLIENT peuvent accéder aux ressources sous /api/client

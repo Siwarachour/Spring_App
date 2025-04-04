@@ -19,10 +19,10 @@ private UserRepository userRepository;
     @Override
     public Item ajouterItem(Item item) {
         if (item.getSeller() != null) {
-            Optional<User> existingSeller = userRepository.findByEmail(item.getSeller().getEmail());
+            User existingSeller = userRepository.findByEmail(item.getSeller().getEmail());
 
-            if (existingSeller.isPresent()) {
-                item.setSeller(existingSeller.get()); // Associer l'utilisateur existant
+            if (existingSeller != null) {
+                item.setSeller(existingSeller); // Associer l'utilisateur existant
             } else {
                 throw new RuntimeException("Le vendeur avec l'email " + item.getSeller().getEmail() + " n'existe pas !");
             }
@@ -30,6 +30,7 @@ private UserRepository userRepository;
 
         return itemRepository.save(item);
     }
+
 
     @Override
     public Item updateItem(Item item) {

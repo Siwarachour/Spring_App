@@ -26,12 +26,16 @@ public class TransactionServiceImpl implements TransactionService{
     @Override
     public Transaction ajouterTransaction(Transaction transaction) {
         // Vérifier et récupérer le buyer depuis la base
-        User buyer = userRepository.findByEmail(transaction.getBuyer().getEmail())
-                .orElseThrow(() -> new RuntimeException("Acheteur non trouvé : " + transaction.getBuyer().getEmail()));
+        User buyer = userRepository.findByEmail(transaction.getBuyer().getEmail());
+        if (buyer == null) {
+            throw new RuntimeException("Acheteur non trouvé : " + transaction.getBuyer().getEmail());
+        }
 
         // Vérifier et récupérer le seller depuis la base
-        User seller = userRepository.findByEmail(transaction.getSeller().getEmail())
-                .orElseThrow(() -> new RuntimeException("Vendeur non trouvé : " + transaction.getSeller().getEmail()));
+        User seller = userRepository.findByEmail(transaction.getSeller().getEmail());
+        if (seller == null) {
+            throw new RuntimeException("Vendeur non trouvé : " + transaction.getSeller().getEmail());
+        }
 
         // Vérifier et récupérer l'item depuis la base
         Item item = itemRepository.findById(transaction.getItem().getId())
@@ -47,7 +51,6 @@ public class TransactionServiceImpl implements TransactionService{
         newTransaction.setCreatedAt(LocalDateTime.now());
         newTransaction.setUpdatedAt(LocalDateTime.now());
 
-        // Sauvegarder la transaction en base
         return transactionRepository.save(newTransaction);
     }
 

@@ -21,28 +21,20 @@ import java.util.Set;
 
 
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-
-    @Column(unique = true, nullable = false)
     private String username;
-
     private String password;
     private String firstName;
     private String lastName;
-
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
     private String email;
-
     private String phone;
     private String address;
-
     @Temporal(TemporalType.DATE)
     private Date birthday;
-
-    private boolean enabled;
-    private boolean accountLocked;
     private boolean enabled = true; // Default to true for new users
     private boolean accountLocked = false;
     @Column(nullable = true)
@@ -50,14 +42,6 @@ public class User {
 
     //private String role;
 
-    @ManyToMany
-    @JoinTable(name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> roles;
-
-    @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Item> itemsForSale;
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
@@ -110,8 +94,6 @@ public class User {
         return enabled;
     }
 
-    @OneToMany(mappedBy = "buyer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Transaction> purchases;
     public boolean isAccountLocked() {
         return accountLocked;
     }
@@ -167,7 +149,11 @@ public class User {
     public void setEmail(String email) {
         this.email = email;
     }
+    @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Item> itemsForSale;
 
+    @OneToMany(mappedBy = "buyer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Transaction> purchases;
     /*
     @CreatedDate
     @Column(nullable = false, updatable = false)
