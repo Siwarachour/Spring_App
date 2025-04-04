@@ -27,7 +27,10 @@ public class JwtFilter extends OncePerRequestFilter {
     public JwtFilter(CustomUserDetailsService customUserDetailsService, JwtUtils jwtUtils) {
         this.customUserDetailsService = customUserDetailsService;
         this.jwtUtils = jwtUtils;
+
     }
+
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -36,34 +39,30 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (token != null && jwtUtils.validateToken(token, customUserDetailsService.loadUserByUsername(jwtUtils.extractUsername(token)))) {
             String username = jwtUtils.extractUsername(token);
-
             UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
 
             if (jwtUtils.validateToken(token, userDetails)) {
-                // Extraire le rôle unique du token
+                // Extraire le rôle du token
                 String role = jwtUtils.extractRole(token);
 
-                // Vérifier que le rôle n'est pas null avant de créer l'autorité
-                Collection<SimpleGrantedAuthority> roles = (role != null)
-                        ? List.of(new SimpleGrantedAuthority(role))
-                        : List.of();
+                if (role != null) {
+                    Collection<SimpleGrantedAuthority> roles = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
-                // Créer l'objet d'authentification avec un seul rôle
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, roles);
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    // Créer l'objet d'authentification avec les rôles extraits
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, roles);
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // Assigner l'authentification au contexte de sécurité
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             }
-
         } else {
             handleJwtException(response, "Invalid or expired token");
         }
 
-        // On passe à la prochaine étape du filtre
         filterChain.doFilter(request, response);
     }
+
 
     // Extraire le JWT du header Authorization
     private String getJwtFromRequest(HttpServletRequest request) {
