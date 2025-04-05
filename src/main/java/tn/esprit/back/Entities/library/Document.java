@@ -26,15 +26,12 @@ public class Document {
     private DocumentStatus status;
 
 
-    @JsonIgnore
     @ManyToOne
     private User student;
 
-    @JsonIgnore
     @OneToOne(mappedBy = "document", cascade = CascadeType.ALL)
     private Review review;
 
-    @JsonIgnore
     @ManyToMany
     private List<Category> categories = new ArrayList<>();
 

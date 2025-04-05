@@ -1,6 +1,7 @@
 package tn.esprit.back.Controllers.library;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,10 +28,41 @@ public class DocumentController {
 
     private static final String UPLOAD_DIR = "uploads/";
 
-    @PutMapping("/update")
-    public Document updateDocument(@RequestBody Document document) {
-        return documentService.updateDocument(document);
+    @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Document> updateDocument(
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam("idDocument") Long idDocument,
+            @RequestParam("title") String title,
+            @RequestParam("description") String description,
+            @RequestParam("documentType") String documentType,
+            @RequestParam("keywords") String keywords,
+            @RequestParam("status") String status,
+            @RequestParam("categoryIds") List<Long> categoryIds) throws IOException {
+
+        // Retrieve the existing document
+        Document document = documentService.getDocumentById(idDocument);
+        document.setTitle(title);
+        document.setDescription(description);
+        document.setDocumentType(DocumentType.valueOf(documentType));
+        document.setKeywords(keywords);
+        document.setStatus(DocumentStatus.valueOf(status));
+
+        // If a new file is provided, handle file storage and update fileUrl.
+        if (file != null && !file.isEmpty()) {
+            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            Path filePath = Paths.get(UPLOAD_DIR).resolve(fileName);
+            Files.copy(file.getInputStream(), filePath);
+            document.setFileUrl(filePath.toString());
+        }
+        // Update categories (you may need to call a service method to assign categories)
+        categoryIds.forEach(categoryId -> {
+            // For example, you could call documentService.addDocumentToCategory(document.getIdDocument(), categoryId);
+        });
+
+        Document updatedDocument = documentService.updateDocument(document);
+        return ResponseEntity.ok(updatedDocument);
     }
+
     @GetMapping("/getall")
     public List<Document> getAllDocument() {
         return documentService.getAllDocument();
