@@ -34,16 +34,31 @@ public class ProjetService {
 
     public Tache addTache(int projetId, Tache tache) {
         Projet projet = projetRepo.findById(projetId).orElseThrow();
-        if (projet.getTaches().size() < projet.getNbreGestions()) {
-            tache.setProjet(projet);
-            updateTacheStatus(tache);
-            projet.setNbreMembreDisponible(projet.getNbreMembreDisponible() + 1);
-            projet.getTaches().add(tache);
-            updateProjetStatus(projet);
-            return tache;
+
+        // Vérifie les limites du nombre de tâches
+        if (projet.getTaches().size() >= projet.getNbreGestions()) {
+            throw new RuntimeException("Nombre max de tâches atteint");
         }
-        throw new RuntimeException("Nombre max de tâches atteint");
+
+        // Vérifie les dates par rapport au projet
+        if (tache.getDateFin().isAfter(projet.getDateFin())) {
+            throw new RuntimeException("La date de fin de la tâche dépasse celle du projet");
+        }
+
+        if (tache.getDateDebut().isBefore(projet.getDateDebut())) {
+            throw new RuntimeException("La date de début de la tâche est antérieure à celle du projet");
+        }
+
+        // Liaison, statut, et ajout
+        tache.setProjet(projet);
+        updateTacheStatus(tache);
+        projet.setNbreMembreDisponible(projet.getNbreMembreDisponible() + 1);
+        projet.getTaches().add(tache);
+        updateProjetStatus(projet);
+
+        return tacheRepo.save(tache);
     }
+
 
     private void updateTacheStatus(Tache tache) {
         if (tache.getUtilisateur() == null) {
@@ -98,6 +113,46 @@ public class ProjetService {
             }
         }
         return "Aucune tâche disponible";
+    }
+    public Projet updateProjet(int id, Projet updated) {
+        Projet projet = projetRepo.findById(id).orElseThrow();
+        projet.setNomProjet(updated.getNomProjet());
+        projet.setDescription(updated.getDescription());
+        projet.setDateFin(updated.getDateFin());
+        projet.setNbreGestions(updated.getNbreGestions());
+        return projetRepo.save(projet);
+    }
+
+    public void deleteProjet(int id) {
+        projetRepo.deleteById(id);
+    }
+
+    public List<Projet> getAllProjets() {
+        return projetRepo.findAll();
+    }
+
+    public List<Tache> getTachesDuProjet(int projetId) {
+        Projet projet = projetRepo.findById(projetId).orElseThrow();
+        return projet.getTaches();
+    }
+
+    public Tache updateTache(int id, Tache updated) {
+        Tache tache = tacheRepo.findById(id).orElseThrow();
+        Projet projet = tache.getProjet();
+
+        // vérifier que dateFin de la tâche ≤ projet.dateFin
+        if (updated.getDateFin().isAfter(projet.getDateFin())) {
+            throw new RuntimeException("La date de fin de la tâche ne peut pas dépasser celle du projet");
+        }
+
+        tache.setNomTache(updated.getNomTache());
+        tache.setDateDebut(updated.getDateDebut());
+        tache.setDateFin(updated.getDateFin());
+        return tacheRepo.save(tache);
+    }
+
+    public void deleteTache(int id) {
+        tacheRepo.deleteById(id);
     }
 
 }

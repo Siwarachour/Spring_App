@@ -30,4 +30,29 @@ public class ProjetController {
     public ResponseEntity<?> participate(@PathVariable int id, Principal principal) {
         return ResponseEntity.ok(projetService.participate(id, principal.getName()));
     }
+    // UPDATE PROJET
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateProjet(@PathVariable int id, @RequestBody Projet updatedProjet) {
+        return ResponseEntity.ok(projetService.updateProjet(id, updatedProjet));
+    }
+
+    // DELETE PROJET
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteProjet(@PathVariable int id) {
+        projetService.deleteProjet(id);
+        return ResponseEntity.ok("Projet supprimé");
+    }
+
+    // LISTE DES PROJETS
+    @GetMapping
+    public ResponseEntity<?> getAllProjets() {
+        return ResponseEntity.ok(projetService.getAllProjets());
+    }
+
+    // LISTE DES TÂCHES D'UN PROJET
+    @GetMapping("/{id}/taches")
+    public ResponseEntity<?> getTachesDuProjet(@PathVariable int id) {
+        return ResponseEntity.ok(projetService.getTachesDuProjet(id));
+    }
+
 }
