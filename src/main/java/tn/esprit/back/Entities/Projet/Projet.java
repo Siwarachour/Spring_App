@@ -10,7 +10,8 @@ import java.util.List;
 @Entity
 public class Projet {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     private int idProjet;
     private String nomProjet;
     private String description;

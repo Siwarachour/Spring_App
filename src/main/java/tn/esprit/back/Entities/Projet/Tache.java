@@ -9,7 +9,8 @@ import java.time.LocalDate;
 @Entity
 public class Tache {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     private int idTache;
     private String nomTache;
     private LocalDate dateDebut;
