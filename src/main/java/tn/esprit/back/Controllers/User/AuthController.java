@@ -2,12 +2,14 @@ package tn.esprit.back.Controllers.User;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,6 +17,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +43,7 @@ import java.util.stream.Collectors;
 
 
 public class AuthController {
+
 
     @Autowired
     private final RoleService roleService;  // Service pour gérer les rôles
@@ -120,18 +126,33 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequests loginRequest) {
         // Vérifier si l'utilisateur existe dans la base de données
         User user = userRepository.findByusername(loginRequest.getUsername());
-        if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            return ResponseEntity.status(401).body("Invalid username or password");
+        System.out.println("uuser"+user);
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+
+            if (authentication.isAuthenticated()) {
+                // Print only the username of the authenticated user
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                String role = user.getRole().getName().toString(); // Assurez-vous que 'getRole()' retourne un seul rôle
+
+                // Print the username of the authenticated user
+                String username = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
+                System.out.println("Authenticated User: " + username);
+
+                Map<String, Object> authData = new HashMap<>();
+                authData.put("token", jwtUtils.generateToken(user.getUsername(),role));
+                Authentication authenticationy = SecurityContextHolder.getContext().getAuthentication();
+
+                // Print the authentication details (for debugging)
+                System.out.println(authenticationy + " haaaaaa");
+                return ResponseEntity.ok(authData);
+            }
+            return ResponseEntity.badRequest().body("Invalid username or password");
+        } catch (AuthenticationException e) {
+            log.error(e.getMessage());
+            return ResponseEntity.badRequest().body("Invalid username or password");
         }
-
-        // Récupérer le rôle de l'utilisateur (un seul rôle)
-        String role = user.getRole().getName().toString(); // Assurez-vous que 'getRole()' retourne un seul rôle
-
-        // Générer un token JWT avec le rôle unique
-        String token = jwtUtils.generateToken(user.getUsername(), role);
-
-        // Retourner le token dans la réponse
-        return ResponseEntity.ok(new JwtResponce(token));
     }
 
 
@@ -181,28 +202,40 @@ public class AuthController {
         userRepository.save(user);
 
         // Envoi de l'email avec le lien de réinitialisation
-        String resetLink = "http://localhost:4200/reset-password?token=" + token;
+        String resetLink = "http://localhost:4200/auth/reset-password?token=" + token;
         sendResetPasswordEmail(user.getEmail(), resetLink);
 
         return ResponseEntity.ok(Collections.singletonMap("message", "Reset email sent successfully"));
     }
 
-    private void sendResetPasswordEmail(String recipientEmail, String resetLink) {
+    public void sendResetPasswordEmail(String to, String resetLink) {
         try {
+            // Créer le message de réinitialisation du mot de passe
             MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setTo(to);
+            helper.setSubject("Réinitialisation du mot de passe");
+            helper.setText("Cliquez sur ce lien pour réinitialiser votre mot de passe : " + resetLink);
 
-            helper.setTo(recipientEmail);
-            helper.setSubject("Reset Your Password");
-            helper.setText("Click on the following link to reset your password: " + resetLink, true);
-
+            // Envoi de l'email
             mailSender.send(message);
+        } catch (MailAuthenticationException e) {
+            // Log détaillé de l'erreur d'authentification
+            e.printStackTrace();
+            System.out.println("Erreur d'authentification : " + e.getMessage());
+        } catch (MessagingException e) {
+            // Log spécifique pour les erreurs de messagerie
+            e.printStackTrace();
+            System.out.println("Erreur de messagerie : " + e.getMessage());
         } catch (Exception e) {
-            log.error("Error sending reset password email", e);
+            // Log générique pour toute autre erreur
+            e.printStackTrace();
+            System.out.println("Erreur lors de l'envoi de l'email : " + e.getMessage());
         }
     }
 
-    @PostMapping("/resetPassword")
+
+    @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestParam String resetToken, @RequestParam String newPassword) {
         // Recherche de l'utilisateur par son resetToken
         Optional<User> userOptional = userRepository.findByResetToken(resetToken);
@@ -211,8 +244,12 @@ public class AuthController {
         if (userOptional.isPresent()) {
             User user = userOptional.get();  // Récupère l'objet User de l'Optional
 
+            // Encoder le nouveau mot de passe
+            String encodedPassword = passwordEncoder.encode(newPassword);
+            System.out.println("Mot de passe encodé: " + encodedPassword);  // Vérification dans les logs
+
             // Mettre à jour le mot de passe
-            user.setPassword(passwordEncoder.encode(newPassword));  // Encoder le nouveau mot de passe
+            user.setPassword(encodedPassword);  // Enregistrer le mot de passe encodé
 
             // Sauvegarder l'utilisateur avec le nouveau mot de passe
             userRepository.save(user);
@@ -224,6 +261,7 @@ public class AuthController {
             return ResponseEntity.status(404).body("Token de réinitialisation invalide ou expiré");
         }
     }
+
 
 
 }

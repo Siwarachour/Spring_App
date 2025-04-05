@@ -5,6 +5,7 @@ import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import tn.esprit.back.Entities.Role.Role;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Set;
 
@@ -47,9 +48,11 @@ public class User {
         return resetToken;
     }
 
+
     public void setResetToken(String resetToken) {
         this.resetToken = resetToken;
     }
+
 
     public int getId() {
         return id;

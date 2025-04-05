@@ -7,16 +7,21 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import tn.esprit.back.Entities.User.User;
+import tn.esprit.back.Repository.User.UserRepository;
 
 import java.security.Key;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 @Component
 public class JwtUtils {
 
+    private final UserRepository userRepository;
     @Value("${app.secret-key}")
     private String secretKey;
 
@@ -24,6 +29,10 @@ public class JwtUtils {
 
     @Value("${app.expiration-time}")
     private int expirationTime;
+
+    public JwtUtils(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     // Générer le token en incluant un seul rôle
     public String generateToken(String username, String role) {
@@ -116,4 +125,8 @@ public class JwtUtils {
                 .parseClaimsJws(token) // Analyser les claims du token
                 .getBody(); // Retourner les claims
     }
+
+
+
+
 }
