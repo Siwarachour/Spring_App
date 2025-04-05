@@ -2,7 +2,7 @@ package tn.esprit.back.Entities.Projet;
 
 import jakarta.persistence.*;
 import tn.esprit.back.Entities.User.User;
-
+import tn.esprit.back.Entities.enums.Status;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +28,18 @@ public class Projet {
 
     @OneToMany(mappedBy = "projet", cascade = CascadeType.ALL)
     private List<Tache> taches = new ArrayList<>();
+
+
+    @Enumerated(EnumType.STRING)
+    private Status status = Status.NOT_BEGIN;
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
 
     public int getIdProjet() {
         return idProjet;

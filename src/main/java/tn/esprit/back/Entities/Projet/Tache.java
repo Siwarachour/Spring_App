@@ -1,10 +1,8 @@
 package tn.esprit.back.Entities.Projet;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import tn.esprit.back.Entities.User.User;
+import tn.esprit.back.Entities.enums.Status;
 
 import java.time.LocalDate;
 
@@ -22,6 +20,17 @@ public class Tache {
 
     @ManyToOne
     private User utilisateur; // Assignée lors de participation
+
+    @Enumerated(EnumType.STRING)
+    private Status status = Status.NOT_BEGIN;
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
 
     public int getIdTache() {
         return idTache;
