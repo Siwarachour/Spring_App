@@ -20,7 +20,7 @@ public class CvService {
         String username = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
         System.out.println(username);
         // Retrieve the user from the UserRepository based on the username
-        User user = userRepository.findByusername(username); // Assuming your UserRepository has a method to find by username
+        User user = userRepository.findByUsername(username); // Assuming your UserRepository has a method to find by username
 
         if (user != null) {
             // Set the connected user to the cv

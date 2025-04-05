@@ -15,7 +15,6 @@ import java.security.Principal;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -44,11 +43,9 @@ public class User implements UserDetails, Principal {
     private boolean enabled = true; // Default to true for new users
     private boolean accountLocked = false;
 
-
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
-
 
     @OneToMany
     private Set<Offre> offres;
@@ -62,26 +59,25 @@ public class User implements UserDetails, Principal {
     // Principal method
     @Override
     public String getName() {
-        return username;
+        return username;  // Return the username for the Principal
     }
 
     // UserDetails methods
     @Override
     public String getUsername() {
-        return username;
+        return username;  // Return the username for UserDetails
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        // If the user has roles, return them as authorities
+        return Set.of(new SimpleGrantedAuthority("ROLE_" + role.getName()));  // Example: "ROLE_USER"
     }
 
     @Override
     public String getPassword() {
-        return password;
+        return password;  // Return the password for UserDetails
     }
-
-
 
     @Override
     public boolean isAccountNonExpired() {
@@ -90,7 +86,7 @@ public class User implements UserDetails, Principal {
 
     @Override
     public boolean isAccountNonLocked() {
-        return !accountLocked;
+        return !accountLocked;  // If accountLocked is false, the account is not locked
     }
 
     @Override
@@ -100,6 +96,6 @@ public class User implements UserDetails, Principal {
 
     @Override
     public boolean isEnabled() {
-        return enabled;
+        return enabled;  // Check if the account is enabled
     }
 }

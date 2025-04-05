@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "http://localhost:4200", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST})
 
 
 public class AuthController {
@@ -81,7 +81,7 @@ public class AuthController {
         Map<String, String> response = new HashMap<>();
 
         // Check if the username already exists
-        if (userRepository.findByusername(user.getUsername()) != null) {
+        if (userRepository.findByUsername(user.getUsername()) != null) {
             response.put("error", "Username is already in use");
             return ResponseEntity.badRequest().body(response);
         }
@@ -125,7 +125,7 @@ public class AuthController {
 
         if (authentication != null && authentication.isAuthenticated()) {
             String username = authentication.getName();
-            User user = userRepository.findByusername(username); // Fetch the user object using the username
+            User user = userRepository.findByUsername(username); // Fetch the user object using the username
             return ResponseEntity.ok(user);  // Return user data as needed
         }
 
@@ -135,29 +135,34 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequests loginRequest) {
         // Vérifier si l'utilisateur existe dans la base de données
-        User user = userRepository.findByusername(loginRequest.getUsername());
-        if (user == null) {
-            return ResponseEntity.status(401).body("User not found");
+        User user = userRepository.findByUsername(loginRequest.getUsername());
+        System.out.println("uuser"+user);
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+
+            if (authentication.isAuthenticated()) {
+                // Print only the username of the authenticated user
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                String role = user.getRole().getName().toString(); // Assurez-vous que 'getRole()' retourne un seul rôle
+
+                // Print the username of the authenticated user
+                String username = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
+                System.out.println("Authenticated User: " + username);
+
+                Map<String, Object> authData = new HashMap<>();
+                authData.put("token", jwtUtils.generateToken(user.getUsername(),role));
+                Authentication authenticationy = SecurityContextHolder.getContext().getAuthentication();
+
+                // Print the authentication details (for debugging)
+                System.out.println(authenticationy + " haaaaaa");
+                return ResponseEntity.ok(authData);
+            }
+            return ResponseEntity.badRequest().body("Invalid username or password");
+        } catch (AuthenticationException e) {
+            log.error(e.getMessage());
+            return ResponseEntity.badRequest().body("Invalid username or password");
         }
-
-        // Récupérer le rôle de l'utilisateur (un seul rôle)
-        String role = user.getRole().getName().toString(); // Assurez-vous que 'getRole()' retourne un seul rôle
-
-        // Générer un token JWT avec le rôle unique
-        String token = jwtUtils.generateToken(user.getUsername(), role);
-        System.out.println(user.getUsername() + " " + role);
-
-        // After generating the token, set the user authentication in the SecurityContextHolder
-        // Create an Authentication object
-        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                user.getUsername(), null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
-        );
-
-        // Set authentication in the security context
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Return the token in the response
-        return ResponseEntity.ok(new JwtResponce(token));
     }
 
 

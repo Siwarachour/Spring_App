@@ -1,6 +1,5 @@
 package tn.esprit.back.configurations;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,59 +16,65 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtUtils jwtUtils;
 
-    // Bean pour l'encodeur de mot de passe
+    public SecurityConfig(CustomUserDetailsService customUserDetailsService, JwtUtils jwtUtils) {
+        this.customUserDetailsService = customUserDetailsService;
+        this.jwtUtils = jwtUtils;
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Bean pour l'AuthenticationManager
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity httpSecurity) throws Exception {
         AuthenticationManagerBuilder authenticationManagerBuilder = httpSecurity.getSharedObject(AuthenticationManagerBuilder.class);
-
         authenticationManagerBuilder.userDetailsService(customUserDetailsService).passwordEncoder(passwordEncoder());
         return authenticationManagerBuilder.build();
     }
 
-    // Bean pour configurer la sécurité des requêtes HTTP
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
+                .csrf(csrf -> csrf.disable())  // Disable CSRF for now (you can enable it based on your use case)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))  // Handle CORS configuration
 
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))  // Remplace "cors()" avec la nouvelle méthode
-// Remplace "csrf()" avec la nouvelle méthode
+                // Authorize requests
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/api/auth/login").permitAll()
-                        .requestMatchers("/api/auth/**", "/oauth2/**").permitAll() // Permet l'accès aux routes d'authentification sans authentification
-                        .requestMatchers("/api/auth/users/{id}/roles").hasRole("ADMIN")
-                        .requestMatchers("/login", "/oauth2/**", "/auth/**", "/application/**", "/offre/add").permitAll()  // Allow public access to these endpoints
-                        .requestMatchers("/api/auth/user-info").authenticated() // Protect user-info endpoint
-                        .anyRequest().authenticated()
+                        // Allow swagger UI and API docs to be accessed publicly
+                        .requestMatchers("/Projetback/swagger-ui/**", "/Projetback/v3/api-docs/**").permitAll()
+
+                        // Allow public access to login and registration endpoints
+                        .requestMatchers("/Projetback/auth/login", "/Projetback/auth/register").permitAll()
+                        .requestMatchers("/login", "/register").permitAll()  // Public endpoints
+                        .requestMatchers("/Projetback/offre/add").authenticated()  // Require authentication for /offre/add
+
+                        // Allow access to the /offre/add endpoint without authentication (with the correct context path)
+
+                        // Permit all other requests (you can customize based on your needs)
+                        .anyRequest().permitAll()
                 )
-                .addFilterBefore(new JwtFilter(customUserDetailsService, jwtUtils), UsernamePasswordAuthenticationFilter.class); // Ajout du filtre JWT
+                .addFilterBefore(new JwtFilter(customUserDetailsService, jwtUtils), UsernamePasswordAuthenticationFilter.class); // Add JWT Filter
 
         return httpSecurity.build();
     }
-    // Bean pour configurer CORS (Cross-Origin Resource Sharing)
+
+
+
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         var configuration = new org.springframework.web.cors.CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));  // Frontend URL
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));  // Make sure "Authorization" is included
-        configuration.setAllowCredentials(true);  // Allow credentials to be sent
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        configuration.setAllowCredentials(true);
         var source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
 }

@@ -1,19 +1,22 @@
 package tn.esprit.back.configurations;
+import org.springframework.security.core.GrantedAuthority;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import tn.esprit.back.Entities.Role.Role;
 
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtUtils {
@@ -24,88 +27,85 @@ public class JwtUtils {
     @Value("${app.expiration-time}")
     private int expirationTime;
 
-    // Générer le token en incluant un seul rôle
+    // Generate token
     public String generateToken(String username, String role) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role); // Ajout du rôle unique dans les claims
-
-        // Créer le token avec les claims
+        claims.put("role", role); // Add role to claims
         return createToken(claims, username);
     }
 
-    // Créer le token avec les informations de l'utilisateur
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
-                .setClaims(claims) // Ajouter les claims
-                .setSubject(subject) // Ajouter le nom d'utilisateur
-                .setIssuedAt(new Date(System.currentTimeMillis())) // Date d'émission du token
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime)) // Date d'expiration du token
-                .signWith(getSignKey(), SignatureAlgorithm.HS512) // Signature du token
-                .compact(); // Retourner le token
+                .setClaims(claims)
+                .setSubject(subject)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .signWith(getSignKey(), SignatureAlgorithm.HS512)
+                .compact();
     }
 
-    // Générer la clé secrète utilisée pour signer le token
     private Key getSignKey() {
-        return Keys.secretKeyFor(SignatureAlgorithm.HS512); // Clé secrète de 512 bits
+        // Use the secretKey loaded from application.properties or application.yml
+        return new javax.crypto.spec.SecretKeySpec(secretKey.getBytes(), SignatureAlgorithm.HS512.getJcaName());
     }
 
-    // Valider le token avec les informations de l'utilisateur
+
     public boolean validateToken(String token, UserDetails userDetails) {
-        String username = extractUsername(token); // Extraire le nom d'utilisateur du token
-        String roleFromToken = extractRole(token); // Extraire le rôle du token
+        String username = extractUsername(token);
+        String roleFromToken = extractRole(token);
+        System.out.println("Role from token: " + roleFromToken);
+        System.out.println("userDetails.getAuthorities(): " + userDetails.getAuthorities());
 
-        // Vérifier si le nom d'utilisateur et le rôle sont valides
+        // Log the class of the authority object to check if it's correctly returning the Role object
+        userDetails.getAuthorities().forEach(authority -> {
+            System.out.println("Authority class type: " + authority.getClass());
+            System.out.println("Authority value: " + authority.getAuthority());
+        });
+
+        // Convert authorities to a list of strings
+        List<String> roleNames = userDetails.getAuthorities().stream()
+                .map(authority -> authority.getAuthority()) // Extract the role name (a string)
+                .collect(Collectors.toList());
+
+        // Print the list of role names (as strings)
+        System.out.println("User details roles: " + roleNames);
+        System.out.println("roleuserconnecte: " + roleNames);
+
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token)
-                && userDetails.getAuthorities().stream().anyMatch(authority -> roleFromToken.equals(authority.getAuthority())));
+                && roleNames.stream().anyMatch(roleFromToken::equals));  // Compare the role from token with the authorities
     }
 
-    // Vérifier si le token est expiré
+
+
+
+
     private boolean isTokenExpired(String token) {
-        return extractExpirationDate(token).before(new Date()); // Comparer la date d'expiration avec la date actuelle
+        Date expirationDate = extractExpirationDate(token);
+        System.out.println("Token expiration date: " + expirationDate);
+        return expirationDate.before(new Date());
     }
 
-    // Extraire la date d'expiration du token
     private Date extractExpirationDate(String token) {
-        return extractClaim(token, Claims::getExpiration); // Extraire la date d'expiration
+        return extractClaim(token, Claims::getExpiration);
     }
 
-    // Extraire le nom d'utilisateur du token
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject); // Extraire le nom d'utilisateur du token
-    }
-    private String getJwtFromRequestahmed(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        System.out.println("Authorization Header: " + bearerToken);  // Log to debug
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);  // Extract token without "Bearer " prefix
-        }
-        return null;
+        return extractClaim(token, Claims::getSubject);
     }
 
-    // Extraire le rôle du token
     public String extractRole(String token) {
-        return extractClaim(token, claims -> (String) claims.get("role")); // Extraire le rôle en tant que String
+        return extractClaim(token, claims -> (String) claims.get("role"));
     }
 
-    // Extraire des informations spécifiques des claims du token
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token); // Extraire tous les claims
-        return claimsResolver.apply(claims); // Appliquer la fonction pour extraire la valeur désirée
-    }
-    public String getUsernameFromToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(secretKey) // The secret key to decode the token
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject(); // Extract the subject (username) from the token
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
     }
 
-    // Extraire tous les claims du token
     private Claims extractAllClaims(String token) {
-        return Jwts.parser() // Analyser le token
-                .setSigningKey(getSignKey()) // Définir la clé de signature
-                .parseClaimsJws(token) // Analyser les claims du token
-                .getBody(); // Retourner les claims
+        return Jwts.parser()
+                .setSigningKey(getSignKey())
+                .parseClaimsJws(token)
+                .getBody();
     }
 }
