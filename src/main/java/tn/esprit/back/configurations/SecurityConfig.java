@@ -47,12 +47,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/auth/register").permitAll()
-                        .requestMatchers("/api/auth/**", "/oauth2/**").permitAll() // Permet l'accès aux routes d'authentification sans authentification
+                        .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
+                        .requestMatchers("/api/auth/reset-password").permitAll()
                         .requestMatchers("/api/auth/users/{id}/roles").hasRole("ADMIN")
-                                .requestMatchers("/api/auth/reset-password").permitAll()
-                       // .requestMatchers("/api/auth/user").authenticated() // Assurez-vous que la route est accessible
 
-                       
+
+
+
                         .anyRequest().authenticated()  // Authentifie toutes les autres requêtes
 
                 )

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.security.core.GrantedAuthority;
 import tn.esprit.back.Entities.User.User;
 
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.List;
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 
-public class Role {
+public class Role implements GrantedAuthority {
 
 
     @Id
@@ -56,6 +57,10 @@ public class Role {
         this.name = name;
     }
 
+    @Override
+    public String getAuthority() {
+        return name != null ? name.name() : null; // Return the role as a string, e.g., "ROLE_ADMIN"
+    }
 
 
 /*   @CreatedDate

@@ -2,6 +2,7 @@ package tn.esprit.back.Services.User;
 
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Repository.User.UserRepository;
 import java.util.Collections;
+import java.util.List;
 
 
 @Service
@@ -20,11 +22,12 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user =userRepository.findByusername(username);
-        if(user==null){
-            throw new UsernameNotFoundException("user not found");
-        }
-        return new org.springframework.security.core.userdetails.User(user.getUsername(),user.getPassword(),Collections.singletonList(new SimpleGrantedAuthority(user.getRole().toString())));
+        User user = userRepository.findByusername(username);
+
+        // Convert the single Role object to SimpleGrantedAuthority
+        GrantedAuthority authority = new SimpleGrantedAuthority(user.getRole().getAuthority());
+
+        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), List.of(authority));
     }
 
 

@@ -10,12 +10,10 @@ import org.springframework.stereotype.Component;
 import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Repository.User.UserRepository;
 
+import javax.crypto.spec.SecretKeySpec;
 import java.security.Key;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 
 @Component
@@ -56,7 +54,8 @@ public class JwtUtils {
 
     // Générer la clé secrète utilisée pour signer le token
     private Key getSignKey() {
-        return Keys.secretKeyFor(SignatureAlgorithm.HS512); // Clé secrète de 512 bits
+        byte[] decodedKey = Base64.getDecoder().decode(secretKey);
+        return new SecretKeySpec(decodedKey, 0, decodedKey.length, "HmacSHA512");
     }
 
     public boolean validateTokenn(String token) {
