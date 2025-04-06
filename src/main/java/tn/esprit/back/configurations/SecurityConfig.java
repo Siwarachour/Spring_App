@@ -51,8 +51,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/reset-password").permitAll()
                         .requestMatchers("/api/auth/profile").permitAll()
                         .requestMatchers("/api/auth/profile/image").authenticated()
+                        .requestMatchers("/api/auth/users/upload-image").authenticated()
                         .requestMatchers("/api/auth/users/{username}/upload-image").permitAll()
 
+                       
 
                         .requestMatchers("/api/auth/users/{id}/roles").hasRole("ADMIN")
 

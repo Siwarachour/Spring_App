@@ -23,7 +23,7 @@ public class UserProfileController {
     @Autowired
     public UserProfileController(CustomUserDetailsService customUserDetailsService, UserRepository userRepository) {
         this.customUserDetailsService = customUserDetailsService;
-        this.userRepository = userRepository;  
+        this.userRepository = userRepository;
     }
 
 

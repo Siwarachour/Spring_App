@@ -318,10 +318,15 @@ public class AuthController {
     }
 
 
-    @PutMapping(value="/users/{username}/upload-image" ,consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadProfileImage(@PathVariable String username,
-                                                @RequestParam("image") MultipartFile image) {
+    @PutMapping(value="/users/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadProfileImage(
+            Authentication authentication,
+            @RequestParam("image") MultipartFile image) {
+
         try {
+            // Récupérer le nom d'utilisateur à partir du token JWT
+            String username = authentication.getName();
+
             User user = userRepository.findByusername(username);
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Utilisateur non trouvé");
