@@ -51,6 +51,18 @@ public class User {
     @ManyToMany
     private List<Projet> projetsParticipes;
 
+    @Lob
+    private byte[] image;
+
+
+    public byte[] getImage() {
+        return image;
+    }
+
+    public void setImage(byte[] image) {
+        this.image = image;
+    }
+
 
     public List<Projet> getProjetsCrees() {
         return projetsCrees;

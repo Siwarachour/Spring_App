@@ -30,5 +30,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), List.of(authority));
     }
 
+    public User save(User user) {
+        return userRepository.save(user);  // Utilisation de save() du JpaRepository pour persister l'utilisateur
+    }
+
 
 }

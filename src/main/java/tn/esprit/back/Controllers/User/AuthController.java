@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -23,6 +25,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.back.Entities.Role.Role;
 import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Entities.User.UserProfile;
@@ -33,6 +36,7 @@ import tn.esprit.back.Requests.LoginRequests;
 import tn.esprit.back.Services.User.RoleService;
 import tn.esprit.back.configurations.JwtUtils;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -125,7 +129,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequests loginRequest) {
-        // Vérifier si l'utilisateur existe dans la base de données
+
         User user = userRepository.findByusername(loginRequest.getUsername());
         System.out.println("uuser"+user);
         try {
@@ -133,11 +137,11 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
             if (authentication.isAuthenticated()) {
-                // Print only the username of the authenticated user
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                String role = user.getRole().getName().toString(); // Assurez-vous que 'getRole()' retourne un seul rôle
 
-                // Print the username of the authenticated user
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                String role = user.getRole().getName().toString();
+
+
                 String username = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
                 System.out.println("Authenticated User: " + username);
 
@@ -145,7 +149,7 @@ public class AuthController {
                 authData.put("token", jwtUtils.generateToken(user.getUsername(),role));
                 Authentication authenticationy = SecurityContextHolder.getContext().getAuthentication();
 
-                // Print the authentication details (for debugging)
+
                 System.out.println(authenticationy + " haaaaaa");
                 return ResponseEntity.ok(authData);
             }
@@ -280,6 +284,63 @@ public class AuthController {
 
         return ResponseEntity.ok(profile);
     }
+
+    @PostMapping("/profile/image")
+    public ResponseEntity<String> uploadProfileImage(@RequestParam("file") MultipartFile file) {
+        try {
+            // Vérifier si l'utilisateur est authentifié
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(403).body("Utilisateur non authentifié");
+            }
+
+            String username = authentication.getName();  // Le nom d'utilisateur est récupéré via getName()
+
+            // Charger l'utilisateur depuis la base de données en utilisant le nom d'utilisateur
+            User user = userRepository.findByusername(username);  // Assurez-vous que cette méthode existe dans votre UserRepository
+            if (user == null) {
+                return ResponseEntity.status(404).body("Utilisateur non trouvé");
+            }
+
+            // Vérifier si un fichier a été téléchargé
+            if (file.isEmpty()) {
+                return ResponseEntity.status(400).body("Le fichier est vide");
+            }
+
+            // Enregistrer l'image (en la stockant en tant que tableau de bytes)
+            user.setImage(file.getBytes());
+            userRepository.save(user);  // Sauvegarder l'utilisateur avec l'image dans la base de données
+
+            return ResponseEntity.ok("Image uploaded successfully");
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body("Échec du téléchargement de l'image");
+        }
+    }
+
+
+    @PutMapping(value="/users/{username}/upload-image" ,consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadProfileImage(@PathVariable String username,
+                                                @RequestParam("image") MultipartFile image) {
+        try {
+            User user = userRepository.findByusername(username);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Utilisateur non trouvé");
+            }
+
+            if (image.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Le fichier est vide");
+            }
+
+            // Enregistrer l'image
+            user.setImage(image.getBytes());
+            userRepository.save(user);
+
+            return ResponseEntity.ok("Image uploaded successfully.");
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Échec du téléchargement de l'image.");
+        }
+    }
+
 
 
 }
