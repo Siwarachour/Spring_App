@@ -1,12 +1,15 @@
 package tn.esprit.back.Entities.coursCertificat;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import tn.esprit.back.Entities.User.User;
 
 import java.util.Set;
 
 @Entity
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Cours {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,19 +19,30 @@ public class Cours {
     private String description;
     private String auteur;
     private String categorie;
-    private String contenu;
+    private String langue;
+    private int duree;
+    private double prix;
+
+    private String imageUrl;   // Ajout du champ pour l'image
+    private String documentUrl; // Ajout du champ pour le PDF
+
+    @Enumerated(EnumType.STRING)
+    private NiveauCours niveau;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    private Certificat certificat;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private Test test;
+
+    @ManyToMany(mappedBy="cours", cascade = CascadeType.ALL)
+    private Set<User> users;
 
     public Certificat getCertificat() {
         return certificat;
     }
 
-    public String getContenu() {
-        return contenu;
-    }
-
-    public void setContenu(String contenu) {
-        this.contenu = contenu;
-    }
 
     public void setCertificat(Certificat certificat) {
         this.certificat = certificat;
@@ -122,20 +136,23 @@ public class Cours {
         this.users = users;
     }
 
-    private String langue;
-    private int duree;
-    private double prix;
+    // Getters et Setters pour les nouveaux champs
+    public String getImageUrl() {
+        return imageUrl;
+    }
 
-    @Enumerated(EnumType.STRING)
-    private NiveauCours niveau;
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 
-    @OneToOne(cascade = CascadeType.ALL)
-    private Certificat certificat;
+    public String getDocumentUrl() {
+        return documentUrl;
+    }
 
-    @OneToOne(cascade = CascadeType.ALL)
-    private Test test;
+    public void setDocumentUrl(String documentUrl) {
+        this.documentUrl = documentUrl;
+    }
 
-    @ManyToMany(mappedBy="cours", cascade = CascadeType.ALL)
-    private Set<User> users;
+
 
 }

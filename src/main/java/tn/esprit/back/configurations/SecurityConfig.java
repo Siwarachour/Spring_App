@@ -44,7 +44,9 @@ return  authenticationManagerBuilder.build();
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/oauth2/**").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()  // remplacer ".anyRequest().authenticated()" par ".anyRequest().permitAll()"
+                                                    //pour desactiver l'authentification
+
                 )
                /* .oauth2Login(oauth2 -> oauth2
                         .defaultSuccessUrl("/welcome", true) // Redirection après succès

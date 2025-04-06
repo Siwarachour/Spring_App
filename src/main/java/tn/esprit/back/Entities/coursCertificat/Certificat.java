@@ -12,6 +12,13 @@ public class Certificat {
     private String nom;
     private String instructeur;
     private int validite;
+    private int statut;
+
+    @Enumerated(EnumType.STRING)
+    private NiveauCertificat niveau;
+
+    @OneToOne(mappedBy = "certificat")
+    private Cours cours;
 
     public long getId() {
         return id;
@@ -69,12 +76,6 @@ public class Certificat {
         this.cours = cours;
     }
 
-    private int statut;
 
-    @Enumerated(EnumType.STRING)
-    private NiveauCertificat niveau;
-
-    @OneToOne(mappedBy = "certificat")
-    private Cours cours;
 
 }
