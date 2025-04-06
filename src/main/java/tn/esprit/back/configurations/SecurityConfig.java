@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
                         .requestMatchers("/api/auth/reset-password").permitAll()
+                        .requestMatchers("/api/auth/profile").permitAll()
                         .requestMatchers("/api/auth/users/{id}/roles").hasRole("ADMIN")
 
 

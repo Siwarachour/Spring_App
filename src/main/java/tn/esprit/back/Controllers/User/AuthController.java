@@ -25,6 +25,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.back.Entities.Role.Role;
 import tn.esprit.back.Entities.User.User;
+import tn.esprit.back.Entities.User.UserProfile;
 import tn.esprit.back.Repository.User.UserRepository;
 import tn.esprit.back.Requests.ForgotPasswordRequest;
 import tn.esprit.back.Requests.JwtResponce;
@@ -173,17 +174,16 @@ public class AuthController {
 
         User user = userOptional.get();
 
-        // Récupérer le rôle de l'utilisateur (un seul rôle)
-        Role role = user.getRole(); // Ici, vous récupérez un seul rôle, pas une liste.
+
+        Role role = user.getRole();
 
         if (role == null) {
-            return ResponseEntity.noContent().build(); // Optionnel: Retourner 204 si aucun rôle trouvé
+            return ResponseEntity.noContent().build();
         }
 
-        // Extraire le nom du rôle (en tant que chaîne de caractères)
-        String roleName = role.getName().toString();  // Conversion de l'énumération en chaîne de caractères
+        String roleName = role.getName().toString();
 
-        return ResponseEntity.ok(roleName); // Renvoie le rôle sous forme de String
+        return ResponseEntity.ok(roleName);
     }
 
 
@@ -262,6 +262,24 @@ public class AuthController {
         }
     }
 
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfile> getProfile(Authentication authentication) {
+        String username = authentication.getName();
+        User user = userRepository.findByusername(username);
+
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        UserProfile profile = new UserProfile(
+                user.getUsername(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName()
+        );
+
+        return ResponseEntity.ok(profile);
+    }
 
 
 }
