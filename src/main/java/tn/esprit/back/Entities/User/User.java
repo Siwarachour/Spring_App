@@ -48,12 +48,23 @@ public class User {
     @OneToMany(mappedBy = "createur")
     private List<Projet> projetsCrees;
 
+    @Column(nullable = true)
+    private boolean approuve = true; // Par défaut non approuvé
+
+
     @ManyToMany
     private List<Projet> projetsParticipes;
 
     @Lob
     private byte[] image;
 
+    public boolean isApprouve() {
+        return approuve;
+    }
+
+    public void setApprouve(boolean approuve) {
+        this.approuve = approuve;
+    }
 
     public byte[] getImage() {
         return image;

@@ -121,6 +121,8 @@ public class AuthController {
 
      user.setRole(existingRole); // Associer le rôle unique à l'utilisateur
      user.setPassword(passwordEncoder.encode(user.getPassword()));
+     user.setApprouve(true); // utilisateur non approuvé à l’inscription
+
 
      userRepository.save(user);
      response.put("message", "User registered successfully!");
