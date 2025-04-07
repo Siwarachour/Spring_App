@@ -47,15 +47,21 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/auth/register").permitAll()
-                        .requestMatchers("/api/auth/**", "/oauth2/**").permitAll() // Permet l'accès aux routes d'authentification sans authentification
-                        .requestMatchers("/api/auth/users/{id}/roles").hasRole("ADMIN")
-                        .requestMatchers("/api/auth/resetPassword").permitAll()
-                        // .requestMatchers("/api/auth/user").authenticated() // Assurez-vous que la route est accessible
+                        .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
+                        .requestMatchers("/api/auth/reset-password").permitAll()
+                        .requestMatchers("/api/auth/profile").permitAll()
+                        .requestMatchers("/api/auth/profile/image").authenticated()
+                        .requestMatchers("/api/auth/users/upload-image").authenticated()
+                        .requestMatchers("/api/auth/users/{username}/upload-image").permitAll()
 
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")  // Seuls les ADMIN peuvent accéder aux ressources sous /api/admin
-                        .requestMatchers("/api/client/**").hasRole("CLIENT")  // Seuls les CLIENT peuvent accéder aux ressources sous /api/client
-                        .requestMatchers("/api/provider/**").hasRole("PROVIDER")  // Seuls les PROVIDER peuvent accéder aux ressources sous /api/provider
-                        .requestMatchers("/api/hr/**").hasRole("HR")  // Seuls les HR peuvent accéder aux ressources sous /api/hr
+                       
+
+                        .requestMatchers("/api/auth/users/{id}/roles").hasRole("ADMIN")
+
+
+
+
+
                         .anyRequest().authenticated()  // Authentifie toutes les autres requêtes
 
                 )

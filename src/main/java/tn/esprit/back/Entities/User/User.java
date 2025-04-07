@@ -3,10 +3,12 @@ package tn.esprit.back.Entities.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import tn.esprit.back.Entities.Projet.Projet;
 import tn.esprit.back.Entities.Marketplace.Item;
 import tn.esprit.back.Entities.Marketplace.Transaction;
 import tn.esprit.back.Entities.Role.Role;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -45,14 +47,50 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
+    @OneToMany(mappedBy = "createur")
+    private List<Projet> projetsCrees;
+
+    @ManyToMany
+    private List<Projet> projetsParticipes;
+
+    @Lob
+    private byte[] image;
+
+
+    public byte[] getImage() {
+        return image;
+    }
+
+    public void setImage(byte[] image) {
+        this.image = image;
+    }
+
+
+    public List<Projet> getProjetsCrees() {
+        return projetsCrees;
+    }
+
+    public void setProjetsCrees(List<Projet> projetsCrees) {
+        this.projetsCrees = projetsCrees;
+    }
+
+    public List<Projet> getProjetsParticipes() {
+        return projetsParticipes;
+    }
+
+    public void setProjetsParticipes(List<Projet> projetsParticipes) {
+        this.projetsParticipes = projetsParticipes;
+    }
 
     public String getResetToken() {
         return resetToken;
     }
 
+
     public void setResetToken(String resetToken) {
         this.resetToken = resetToken;
     }
+
 
     public int getId() {
         return id;
