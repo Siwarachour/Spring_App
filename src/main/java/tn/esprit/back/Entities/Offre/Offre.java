@@ -1,5 +1,7 @@
 package tn.esprit.back.Entities.Offre;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedBy;
@@ -7,6 +9,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import tn.esprit.back.Entities.Application.Application;
 import tn.esprit.back.Entities.User.User;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @EntityListeners(AuditingEntityListener.class)
@@ -30,6 +33,7 @@ public class Offre {
     @Column(insertable = false)
     private Integer createdBy;
 
+    @JsonIgnore
     @ManyToOne
     private User rh;
 
@@ -43,7 +47,7 @@ public class Offre {
 
     // You can add a default constructor if needed (default empty set for applications)
     public Offre() {
-        this.applications = null; // Allow applications to be null initially
+        this.applications = new HashSet<>(); // Initialize to an empty set to avoid null issues
     }
 
 }

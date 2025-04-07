@@ -1,5 +1,7 @@
 package tn.esprit.back.Entities.Cv;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedBy;
@@ -31,8 +33,18 @@ public class Cv {
     private String contactinfo;
 
     private String education;
+    private String pdfDownloadLink;
 
-@OneToOne
+    public String getPdfDownloadLink() {
+        return pdfDownloadLink;
+    }
+    @JsonGetter("username")
+    public String getstudentname() {
+        return  student.getUsername() ;
+    }
+    @OneToOne
+    @JsonIgnore
+
     User student;
     @CreatedBy
     @Column(insertable = false, updatable = false)  // Ensure this is only set on creation

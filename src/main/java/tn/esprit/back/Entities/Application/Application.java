@@ -2,6 +2,7 @@ package tn.esprit.back.Entities.Application;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedBy;
@@ -45,10 +46,22 @@ private User student;
     public Integer getStudentId() {
         return student != null ? student.getId() : null;
     }
+    @JsonGetter("username")  // This will be the name of the field in the JSON response
+    public String getStudentname() {
+        return student != null ? student.getUsername() : null;
+    }
 
-    @OneToOne
-     Cv cv;
-
+    @OneToOne(fetch = FetchType.EAGER)
+    @JsonInclude(JsonInclude.Include.NON_NULL)  // Ensure it's included when not null
+    private Cv cv;
+    @JsonGetter("pdfDownloadLink")
+    public String getCvLinkPdf() {
+        return  cv.getPdfDownloadLink() ;
+    }
+    @JsonGetter("id")
+    public Integer getCvid() {
+        return  cv.getId() ;
+    }
     @CreatedBy
     @Column(insertable = false)
     private Integer createdBy;

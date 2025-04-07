@@ -48,7 +48,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Allow swagger UI and API docs to be accessed publicly
                         .requestMatchers("/Projetback/swagger-ui/**", "/Projetback/v3/api-docs/**").permitAll()
-
+                        .requestMatchers("/api/offre/add").permitAll()
                         // Allow public access to login and registration endpoints
                         .requestMatchers("/Projetback/auth/login", "/Projetback/auth/register").permitAll()
                         .requestMatchers("/login", "/register").permitAll()  // Public endpoints

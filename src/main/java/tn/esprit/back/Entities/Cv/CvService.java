@@ -1,11 +1,11 @@
 package tn.esprit.back.Entities.Cv;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Repository.User.UserRepository;
+
+import java.io.IOException;
 
 @RequiredArgsConstructor
 @Service
@@ -14,23 +14,41 @@ public class CvService {
     private final UserRepository userRepository;
 
 
-    public Object addCv(Cv cv, Authentication connecteduser) {
-        // Retrieve the authentication details from the SecurityContext
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
-        System.out.println(username);
-        // Retrieve the user from the UserRepository based on the username
-        User user = userRepository.findByUsername(username); // Assuming your UserRepository has a method to find by username
+    public Object addCv(Cv cv) {
+        // Temporarily hardcoded username; you can later replace with dynamic user extraction
+        User user = userRepository.findByUsername("ahmed2");
 
         if (user != null) {
-            // Set the connected user to the cv
             cv.setStudent(user);
-            // Save the CV and return the saved ID
-            return cvRepo.save(cv).getId();
+
+            // 1. Save CV first to get its ID
+            Cv savedCv = cvRepo.save(cv);
+
+            try {
+                // 2. Generate PDF and get filename
+                String fileName = CvPdfGenerator.generateAndSavePdf(savedCv);
+
+                // 3. Build the download link
+                String downloadLink = "http://localhost:8089/cv/download/" + savedCv.getId();
+                savedCv.setPdfDownloadLink(downloadLink);
+
+                // 4. Save again to persist the link
+                cvRepo.save(savedCv);
+
+                // 5. Return the whole object or just the link
+                return savedCv.getId(); // or return downloadLink;
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new RuntimeException("Failed to generate CV PDF");
+            }
         } else {
-            // Handle the case where user is not found, return some error or exception
             throw new RuntimeException("User not found");
         }
+    }
+
+    public Cv getCvById(int id) {
+        return cvRepo.findById(id).orElse(null);
     }
 
 }
