@@ -1,7 +1,8 @@
 package tn.esprit.back.Controllers.Marketplace;
 
-import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.back.Entities.Marketplace.Transaction;
 import tn.esprit.back.Services.Marketplace.TransactionService;
@@ -16,45 +17,69 @@ public class TransactionController {
     @Autowired
     private TransactionService transactionService;
 
-    @PostMapping
-    @Operation(summary = "Ajouter une transaction")
-    public Transaction ajouterTransaction(@RequestBody Transaction transaction) {
-        return transactionService.ajouterTransaction(transaction);
+    // Ajouter une nouvelle transaction
+    @PostMapping("/add")
+    public ResponseEntity<Transaction> addTransaction(@RequestBody Transaction transaction) {
+        try {
+            Transaction newTransaction = transactionService.ajouterTransaction(transaction);
+            return new ResponseEntity<>(newTransaction, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
     }
 
-    @PutMapping
-    @Operation(summary = "Mettre à jour une transaction")
-    public Transaction updateTransaction(@RequestBody Transaction transaction) {
-        return transactionService.updateTransaction(transaction);
+    // Mettre à jour une transaction existante
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Transaction> updateTransaction(@PathVariable Long id, @RequestBody Transaction transaction) {
+        Optional<Transaction> existingTransaction = transactionService.getTransactionById(id);
+
+        if (existingTransaction.isPresent()) {
+            transaction.setId(id); // S'assurer que l'ID de la transaction est correct
+            Transaction updatedTransaction = transactionService.updateTransaction(transaction);
+            return new ResponseEntity<>(updatedTransaction, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
     }
 
-    @GetMapping
-    @Operation(summary = "Récupérer toutes les transactions")
-    public List<Transaction> getAllTransactions() {
-        return transactionService.getAllTransactions();
+    // Récupérer toutes les transactions
+    @GetMapping("/")
+    public ResponseEntity<List<Transaction>> getAllTransactions() {
+        List<Transaction> transactions = transactionService.getAllTransactions();
+        return new ResponseEntity<>(transactions, HttpStatus.OK);
     }
 
+    // Récupérer une transaction par ID
     @GetMapping("/{id}")
-    @Operation(summary = "Récupérer une transaction par son ID")
-    public Optional<Transaction> getTransactionById(@PathVariable Long id) {
-        return transactionService.getTransactionById(id);
+    public ResponseEntity<Transaction> getTransactionById(@PathVariable Long id) {
+        Optional<Transaction> transaction = transactionService.getTransactionById(id);
+
+        return transaction
+                .map(value -> new ResponseEntity<>(value, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
     }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Supprimer une transaction par son ID")
-    public void supprimerTransaction(@PathVariable Long id) {
-        transactionService.supprimerTransaction(id);
+    // Supprimer une transaction par ID
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Void> deleteTransaction(@PathVariable Long id) {
+        Optional<Transaction> transaction = transactionService.getTransactionById(id);
+
+        if (transaction.isPresent()) {
+            transactionService.supprimerTransaction(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
-    @GetMapping("/user/{userId}")
-    @Operation(summary = "Récupérer les transactions d'un utilisateur")
-    public List<Transaction> getTransactionsByUser(@PathVariable Long userId) {
-        return transactionService.getTransactionsByUser(userId);
-    }
-
-    @PutMapping("/valider/{transactionId}")
-    @Operation(summary = "Valider une transaction")
-    public Transaction validerTransaction(@PathVariable Long transactionId) {
-        return transactionService.validerTransaction(transactionId);
+    // Valider une transaction
+    @PutMapping("/validate/{id}")
+    public ResponseEntity<Transaction> validateTransaction(@PathVariable Long id) {
+        try {
+            Transaction validatedTransaction = transactionService.validerTransaction(id);
+            return new ResponseEntity<>(validatedTransaction, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
     }
 }

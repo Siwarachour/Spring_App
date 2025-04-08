@@ -24,8 +24,16 @@ public class Panier {
     // On stocke uniquement l'email de l'utilisateur
     @Column(nullable = false)
     private String userEmail;
-    @OneToMany
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @OneToMany(mappedBy = "panier", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Item> items;
+    @ManyToOne
+    @JoinColumn(name = "buyer_id")
+    private User buyer;
+
 
     private BigDecimal totalPrice;
 

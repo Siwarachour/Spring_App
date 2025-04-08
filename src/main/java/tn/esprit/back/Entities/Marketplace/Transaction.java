@@ -21,15 +21,15 @@ public class Transaction {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "buyer_email", referencedColumnName = "email", nullable = false)
+    @JoinColumn(name = "buyer_id")
     private User buyer;
 
     @ManyToOne
-    @JoinColumn(name = "seller_email", referencedColumnName = "email", nullable = false)
+    @JoinColumn(name = "seller_id")
     private User seller;
 
     @ManyToOne
-    @JoinColumn(name = "item_id", nullable = false)
+    @JoinColumn(name = "item_id")
     private Item item;
 
     private BigDecimal totalAmount;
@@ -43,11 +43,7 @@ public class Transaction {
     public void setValidee(boolean b) {
     }
 
-    public void setStatus(tn.esprit.back.Services.Marketplace.TransactionStatus transactionStatus) {
-    }
+
+
 }
 
-// ENUM POUR STATUS DE TRANSACTION
-enum TransactionStatus {
-    PENDING, COMPLETED, FAILED;
-}

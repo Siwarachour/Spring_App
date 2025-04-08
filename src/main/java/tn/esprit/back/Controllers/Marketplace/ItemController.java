@@ -19,6 +19,7 @@ public class ItemController {
     @PostMapping
     @Operation(summary = "Ajouter un nouvel article")
     public Item ajouterItem(@RequestBody Item item) {
+        // Appelle simplement la méthode sans le userEmail, puisqu'il est récupéré par le service
         return itemService.ajouterItem(item);
     }
 
