@@ -33,24 +33,24 @@ public class JwtUtils {
     }
 
     // Générer le token en incluant un seul rôle
-    public String generateToken(String username, String role) {
+    public String generateToken(int id, String username, String role) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role); // Ajout du rôle unique dans les claims
-
-        // Créer le token avec les claims
-        return createToken(claims, username);
+        claims.put("id", id);     // Ajout de l'ID
+        claims.put("username", username); // Ajout du username
+        claims.put("role", role);         // Ajout du rôle
+        return createToken(claims);
     }
 
-    // Créer le token avec les informations de l'utilisateur
-    private String createToken(Map<String, Object> claims, String subject) {
+   
+    private String createToken(Map<String, Object> claims) {
         return Jwts.builder()
-                .setClaims(claims) // Ajouter les claims
-                .setSubject(subject) // Ajouter le nom d'utilisateur
-                .setIssuedAt(new Date(System.currentTimeMillis())) // Date d'émission du token
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime)) // Date d'expiration du token
-                .signWith(getSignKey(), SignatureAlgorithm.HS512) // Signature du token
-                .compact(); // Retourner le token
+                .setClaims(claims)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .signWith(getSignKey(), SignatureAlgorithm.HS512)
+                .compact();
     }
+
 
     // Générer la clé secrète utilisée pour signer le token
     private Key getSignKey() {
@@ -79,13 +79,13 @@ public class JwtUtils {
                 && userDetails.getAuthorities().stream().anyMatch(authority -> roleFromToken.equals(authority.getAuthority())));
     }
 
-   /* public Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(secretKey.getBytes())  // Clé secrète
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-    }*/
+    public Long extractUserId(String token) {
+        return extractClaim(token, claims -> ((Number) claims.get("id")).longValue());
+    }
+
+    public String extractUsername(String token) {
+        return extractClaim(token, claims -> (String) claims.get("username"));
+    }
 
 
     // Vérifier si le token est expiré
@@ -98,10 +98,7 @@ public class JwtUtils {
         return extractClaim(token, Claims::getExpiration); // Extraire la date d'expiration
     }
 
-    // Extraire le nom d'utilisateur du token
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject); // Extraire le nom d'utilisateur du token
-    }
+
 
     // Extraire le rôle du token
     public String extractRole(String token) {
