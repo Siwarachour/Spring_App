@@ -24,6 +24,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.back.Entities.Role.Role;
@@ -34,6 +35,7 @@ import tn.esprit.back.Requests.ForgotPasswordRequest;
 import tn.esprit.back.Requests.JwtResponce;
 import tn.esprit.back.Requests.LoginRequests;
 import tn.esprit.back.Services.User.RoleService;
+import tn.esprit.back.Services.User.UserService;
 import tn.esprit.back.configurations.JwtUtils;
 
 import java.io.IOException;
@@ -347,6 +349,43 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Échec du téléchargement de l'image.");
         }
     }
+
+
+
+
+
+
+
+    @RestController
+    @RequestMapping("/api/users")
+    @RequiredArgsConstructor
+    @CrossOrigin(origins = "*")
+    public class UserController {
+
+        private final UserService userService;
+
+        @GetMapping
+        public List<User> getAllUsers() {
+            return userService.getAllUsers();
+        }
+
+        @PutMapping("/{id}")
+        public User updateUser(@PathVariable int id, @RequestBody User user) {
+            return userService.updateUser(id, user);
+        }
+
+        @DeleteMapping("/{id}")
+        public void deleteUser(@PathVariable int id) {
+            userService.deleteUser(id);
+        }
+
+        @PutMapping("/{id}/toggle-approval")
+        public User toggleUserApproval(@PathVariable int id) {
+            return userService.toggleApproval(id);
+        }
+    }
+
+
 
 
 
