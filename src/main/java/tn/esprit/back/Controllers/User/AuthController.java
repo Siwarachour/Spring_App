@@ -386,7 +386,7 @@ public class AuthController {
     }*/
     private static final String UPLOAD_DIRECTORY = "D:/doc/Bureau/PI/Back/src/main/resources/uploads"; // Vérifie ce chemin
 
-    @GetMapping("/api/auth/uploads/{imageName}")
+    @GetMapping("/uploads/{imageName}")
     public ResponseEntity<Resource> getImage(@PathVariable String imageName) {
         // Charger l'image depuis le serveur
         Path imagePath = Paths.get("D:/doc/Bureau/PI/Back/src/main/resources/uploads").resolve(imageName);
@@ -400,6 +400,10 @@ public class AuthController {
             return ResponseEntity.notFound().build();
         }
     }
+
+
+
+
 
 
 
