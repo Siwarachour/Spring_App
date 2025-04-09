@@ -14,4 +14,8 @@ public interface TransactionService {
 
     Transaction validerTransaction(Long transactionId);
     List<Transaction> getTransactionsByUser(Long userId);
+    List<Transaction> getTransactionsByBuyerEmail(String email);
+    List<Transaction> getTransactionsBySellerEmail(String email);
+    void annulerTransactionPourItem(Long itemId);
+
 }

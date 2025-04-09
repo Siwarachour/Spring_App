@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.back.Entities.Marketplace.Paiement;
+import tn.esprit.back.Entities.Marketplace.PaymentMethod;
 import tn.esprit.back.Services.Marketplace.PaiementService;
 
 import java.util.List;
@@ -56,7 +57,7 @@ public class PaiementController {
     // Effectuer un paiement
     @PostMapping("/{transactionId}/effectuer")
     public ResponseEntity<Paiement> effectuerPaiement(@PathVariable Long transactionId, @RequestParam String modePaiement) {
-        Paiement paiement = paiementService.effectuerPaiement(transactionId, modePaiement);
+        Paiement paiement = paiementService.effectuerPaiement(transactionId, PaymentMethod.valueOf(modePaiement));
         return ResponseEntity.ok(paiement);
     }
 }

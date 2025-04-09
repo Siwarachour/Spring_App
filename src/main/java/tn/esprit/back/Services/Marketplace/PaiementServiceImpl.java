@@ -2,10 +2,9 @@ package tn.esprit.back.Services.Marketplace;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import tn.esprit.back.Entities.Marketplace.Paiement;
-import tn.esprit.back.Entities.Marketplace.PaymentMethod;
-import tn.esprit.back.Entities.Marketplace.PaymentStatus;
+import tn.esprit.back.Entities.Marketplace.*;
 import tn.esprit.back.Repository.Marketplace.PaiementRepository;
+import tn.esprit.back.Repository.Marketplace.TransactionRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -49,27 +48,33 @@ public class PaiementServiceImpl implements PaiementService{
         }
     }
 
+    @Autowired
+    private TransactionRepository transactionRepository;
+
+
+
     @Override
-    public Paiement effectuerPaiement(Long transactionId, String modePaiement) {
-        Optional<Paiement> paiementOptional = paiementRepository.findById(transactionId);
-        if (paiementOptional.isPresent()) {
-            Paiement paiement = paiementOptional.get();
+    public Paiement effectuerPaiement(Long transactionId, PaymentMethod paymentMethod) {
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new RuntimeException("Transaction non trouvée"));
 
-            // Convertir modePaiement en enum PaymentMethod
-            try {
-                PaymentMethod paymentMethod = PaymentMethod.valueOf(modePaiement.toUpperCase());
-                paiement.setPaymentMethod(paymentMethod);
-            } catch (IllegalArgumentException e) {
-                throw new RuntimeException("Mode de paiement invalide : " + modePaiement);
-            }
-
-            paiement.setPaymentStatus(PaymentStatus.SUCCESS);
-            paiement.setPaymentDate(LocalDateTime.now());
-
-            return paiementRepository.save(paiement);
-        } else {
-            throw new RuntimeException("Transaction introuvable !");
+        if (transaction.getStatus() != TransactionStatus.PENDING) {
+            throw new RuntimeException("Transaction déjà payée ou annulée");
         }
+
+        Paiement paiement = new Paiement();
+        paiement.setTransaction(transaction);
+        paiement.setPaymentMethod(paymentMethod);
+        paiement.setAmount(transaction.getTotalAmount());
+        paiement.setPaymentDate(LocalDateTime.now());
+        paiement.setPaymentStatus(PaymentStatus.SUCCESS);
+
+        // Mettre à jour la transaction
+        transaction.setStatus(TransactionStatus.COMPLETED);
+        transaction.setUpdatedAt(LocalDateTime.now());
+        transactionRepository.save(transaction);
+
+        return paiementRepository.save(paiement);
     }
 
 }

@@ -1,6 +1,7 @@
 package tn.esprit.back.Services.Marketplace;
 
 import tn.esprit.back.Entities.Marketplace.Paiement;
+import tn.esprit.back.Entities.Marketplace.PaymentMethod;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,5 +13,6 @@ public interface PaiementService {
     Optional<Paiement> getPaiementById(Long id);
     void supprimerPaiement(Long id);
 
-    Paiement effectuerPaiement(Long transactionId, String modePaiement);
+
+    Paiement effectuerPaiement(Long transactionId, PaymentMethod paymentMethod);
 }

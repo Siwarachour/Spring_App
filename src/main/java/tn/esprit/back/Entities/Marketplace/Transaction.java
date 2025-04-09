@@ -19,14 +19,21 @@ public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    @Column(nullable = false)
+    private boolean validee = false;
     @ManyToOne
     @JoinColumn(name = "buyer_id")
     private User buyer;
 
+    @Column(nullable = false)
+    private String buyerEmail;
+
     @ManyToOne
     @JoinColumn(name = "seller_id")
     private User seller;
+
+    @Column(nullable = false)
+    private String sellerEmail;
 
     @ManyToOne
     @JoinColumn(name = "item_id")
@@ -40,10 +47,20 @@ public class Transaction {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public void setValidee(boolean b) {
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        if (buyer != null) {
+            this.buyerEmail = buyer.getEmail();
+        }
+        if (seller != null) {
+            this.sellerEmail = seller.getEmail();
+        }
     }
 
-
-
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }
-

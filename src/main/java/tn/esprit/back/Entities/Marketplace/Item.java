@@ -1,9 +1,10 @@
 package tn.esprit.back.Entities.Marketplace;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 import tn.esprit.back.Entities.User.User;
-import tn.esprit.back.Repository.User.UserRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,11 +32,13 @@ public class Item {
     private Category category;
 
     @ElementCollection
-    private List<String> images;  // Liste des URLs ou chemins des images
+    private List<String> images;
 
     @ManyToOne
     @JoinColumn(name = "seller_id")
-    private User seller;  // L'utilisateur qui vend l'article
+    @JsonIgnore
+    @Schema(hidden = true)
+    private User seller;
 
     @ManyToOne
     @JoinColumn(name = "panier_id")
@@ -47,35 +50,14 @@ public class Item {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Constructeur personnalisé pour accepter l'email du vendeur
-    public Item(String title, String description, BigDecimal price, Category category,
-                List<String> images, String sellerEmail, ItemStatus status, UserRepository userRepository) {
-        this.title = title;
-        this.description = description;
-        this.price = price;
-        this.category = category;
-        this.images = images;
-        this.status = status;
-
-        // Récupérer l'utilisateur vendeur à partir de l'email
-        User seller = userRepository.findByEmail(sellerEmail);
-        if (seller != null) {
-            this.seller = seller;
-        } else {
-            throw new RuntimeException("Vendeur non trouvé avec l'email : " + sellerEmail);
-        }
-
-        this.createdAt = LocalDateTime.now();  // Initialisation de la date de création
-        this.updatedAt = LocalDateTime.now();  // Initialisation de la date de mise à jour
-    }
-
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();  // Initialisation de la date de création
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();  // Mise à jour de la date de mise à jour
+        updatedAt = LocalDateTime.now();
     }
 }
