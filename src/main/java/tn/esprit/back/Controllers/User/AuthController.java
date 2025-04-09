@@ -295,37 +295,7 @@ public class AuthController {
     }
 
 
-   /* @PostMapping("/profile/image")
-    public ResponseEntity<String> uploadProfileImage(@RequestParam("file") MultipartFile file) {
-        try {
-            // Vérifier si l'utilisateur est authentifié
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null || !authentication.isAuthenticated()) {
-                return ResponseEntity.status(403).body("Utilisateur non authentifié");
-            }
 
-            String username = authentication.getName();  // Le nom d'utilisateur est récupéré via getName()
-
-            // Charger l'utilisateur depuis la base de données en utilisant le nom d'utilisateur
-            User user = userRepository.findByusername(username);  // Assurez-vous que cette méthode existe dans votre UserRepository
-            if (user == null) {
-                return ResponseEntity.status(404).body("Utilisateur non trouvé");
-            }
-
-            // Vérifier si un fichier a été téléchargé
-            if (file.isEmpty()) {
-                return ResponseEntity.status(400).body("Le fichier est vide");
-            }
-
-            // Enregistrer l'image (en la stockant en tant que tableau de bytes)
-            user.setImage(file.getBytes());
-            userRepository.save(user);  // Sauvegarder l'utilisateur avec l'image dans la base de données
-
-            return ResponseEntity.ok("Image uploaded successfully");
-        } catch (IOException e) {
-            return ResponseEntity.status(500).body("Échec du téléchargement de l'image");
-        }
-    }*/
 
 
     @Value("${file.upload-dir}")
@@ -355,7 +325,7 @@ public class AuthController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName(); // Récupère le nom d'utilisateur
         User user = userRepository.findByusername(username); // Récupère l'utilisateur depuis la base de données
-
+        System.out.println(user.getUsername());
         // Vérifie si l'utilisateur existe
         if (user != null) {
             // Associer l'image au profil de l'utilisateur
@@ -370,21 +340,6 @@ public class AuthController {
         }
     }
 
-    /*@GetMapping("/uploads/{imageName}")
-    public ResponseEntity<UrlResource> getImage(@PathVariable String imageName) throws IOException {
-        Path imagePath = Paths.get("D:/doc/Bureau/PI/Back/src/main/resources/uploads").resolve(imageName);
-        UrlResource resource = new UrlResource(imagePath.toUri());
-
-        if (resource.exists() || resource.isReadable()) {
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                    .contentType(MediaType.IMAGE_JPEG) // Tu peux ajuster selon le type d'image
-                    .body(resource);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }*/
-    private static final String UPLOAD_DIRECTORY = "D:/doc/Bureau/PI/Back/src/main/resources/uploads"; // Vérifie ce chemin
 
     @GetMapping("/uploads/{imageName}")
     public ResponseEntity<Resource> getImage(@PathVariable String imageName) {
@@ -408,34 +363,31 @@ public class AuthController {
 
 
 
-    @RestController
-    @RequestMapping("/api/users")
-    @RequiredArgsConstructor
-    @CrossOrigin(origins = "*")
-    public class UserController {
+
+
 
         private final UserService userService;
 
-        @GetMapping
+        @GetMapping("/users")
         public List<User> getAllUsers() {
             return userService.getAllUsers();
         }
 
-        @PutMapping("/{id}")
+        @PutMapping("/users/{id}")
         public User updateUser(@PathVariable int id, @RequestBody User user) {
             return userService.updateUser(id, user);
         }
 
-        @DeleteMapping("/{id}")
+        @DeleteMapping("/users/{id}")
         public void deleteUser(@PathVariable int id) {
             userService.deleteUser(id);
         }
 
-        @PutMapping("/{id}/toggle-approval")
+        @PutMapping("/users/{id}/toggle-approval")
         public User toggleUserApproval(@PathVariable int id) {
             return userService.toggleApproval(id);
         }
-    }
+
 
 
 

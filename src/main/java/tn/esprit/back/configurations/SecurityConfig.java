@@ -57,7 +57,8 @@ public class SecurityConfig {
 
 
                         .requestMatchers("/api/auth/profile/image").authenticated()
-                       // .requestMatchers("/api/auth/users/upload-image").authenticated()
+                       .requestMatchers("/api/auth/users").authenticated()
+                        .requestMatchers("/api/auth/users/**").authenticated()
                         .requestMatchers("/api/auth/users/{username}/upload-image").permitAll()
 
                        
