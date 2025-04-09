@@ -55,8 +55,17 @@ public class User {
     @ManyToMany
     private List<Projet> projetsParticipes;
 
-    @Lob
-    private byte[] image;
+    @Column(nullable = true)
+    private String imageUrl;  // Ajoute cet attribut
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
 
     public boolean isApprouve() {
         return approuve;
@@ -66,13 +75,7 @@ public class User {
         this.approuve = approuve;
     }
 
-    public byte[] getImage() {
-        return image;
-    }
 
-    public void setImage(byte[] image) {
-        this.image = image;
-    }
 
 
     public List<Projet> getProjetsCrees() {

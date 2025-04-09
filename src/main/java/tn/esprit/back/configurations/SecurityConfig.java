@@ -49,12 +49,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
                         .requestMatchers("/api/auth/reset-password").permitAll()
-                        .requestMatchers("/api/auth/profile").permitAll()
-                        .requestMatchers("/api/users/**").permitAll()
+                        .requestMatchers("/api/auth/profile").authenticated()
+                        .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/assets/profile/**").permitAll()
+                        .requestMatchers("/api/auth/user/upload-image").authenticated()
+
 
 
                         .requestMatchers("/api/auth/profile/image").authenticated()
-                        .requestMatchers("/api/auth/users/upload-image").authenticated()
+                       // .requestMatchers("/api/auth/users/upload-image").authenticated()
                         .requestMatchers("/api/auth/users/{username}/upload-image").permitAll()
 
                        

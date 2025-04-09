@@ -5,12 +5,23 @@ public class UserProfile {
     private String email;
     private String firstName;
     private String lastName;
+    private String imageUrl;
 
-    public UserProfile(String username, String email, String firstName, String lastName) {
+    public UserProfile(String username, String email, String firstName, String lastName ,String imageUrl) {
         this.username = username;
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
+        this.imageUrl = imageUrl;
+    }
+
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public String getUsername() {

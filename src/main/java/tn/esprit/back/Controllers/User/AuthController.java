@@ -8,6 +8,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +30,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.back.Entities.Role.Role;
@@ -38,7 +44,12 @@ import tn.esprit.back.Services.User.RoleService;
 import tn.esprit.back.Services.User.UserService;
 import tn.esprit.back.configurations.JwtUtils;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -70,32 +81,7 @@ public class AuthController {
     private final tn.esprit.back.Repository.User.roleRepository roleRepository;
 
 
- /*   @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user) {
-        // Vérifier si l'utilisateur existe déjà
-        if (userRepository.findByusername(user.getUsername()) != null) {
-            return ResponseEntity.badRequest().body("Username is already in use");
-        }
 
-        // Vérifier que les rôles existent dans la base de données
-        Set<Role> roles = new HashSet<>();
-        for (Role role : user.getRoles()) {
-            Role existingRole = roleRepository.findById(role.getId()).orElse(null);
-            if (existingRole != null) {
-                roles.add(existingRole);
-            } else {
-                return ResponseEntity.badRequest().body("Role with id " + role.getId() + " not found");
-            }
-        }
-        user.setRoles(roles);
-
-        // Encoder le mot de passe
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        // Sauvegarder l'utilisateur avec les rôles
-        return ResponseEntity.ok(userRepository.save(user));
-    }
-*/
  @PostMapping("/register")
  public ResponseEntity<Map<String, String>> register(@RequestBody User user, HttpServletRequest request) {
      String csrfToken = request.getHeader("X-CSRF-TOKEN");
@@ -270,10 +256,28 @@ public class AuthController {
         }
     }
 
+    @GetMapping("/user/{id}")
+    public ResponseEntity<UserProfile> getUserProfile(@PathVariable int id) {
+        User user = userRepository.findById(id).orElseThrow();
+        String imageUrl = "http://localhost:8089/Projetback/uploads/" + user.getImageUrl(); // ou user.getImageUrl()
+
+        UserProfile profile = new UserProfile(
+                user.getUsername(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                imageUrl
+        );
+
+        return ResponseEntity.ok(profile);
+    }
+
+
     @GetMapping("/profile")
     public ResponseEntity<UserProfile> getProfile(Authentication authentication) {
         String username = authentication.getName();
         User user = userRepository.findByusername(username);
+        String imageUrl = "http://localhost:8089/Projetback/uploads/" + user.getImageUrl(); // ou user.getImageUrl()
 
         if (user == null) {
             return ResponseEntity.notFound().build();
@@ -283,13 +287,15 @@ public class AuthController {
                 user.getUsername(),
                 user.getEmail(),
                 user.getFirstName(),
-                user.getLastName()
+                user.getLastName(),
+                imageUrl
         );
 
         return ResponseEntity.ok(profile);
     }
 
-    @PostMapping("/profile/image")
+
+   /* @PostMapping("/profile/image")
     public ResponseEntity<String> uploadProfileImage(@RequestParam("file") MultipartFile file) {
         try {
             // Vérifier si l'utilisateur est authentifié
@@ -319,39 +325,81 @@ public class AuthController {
         } catch (IOException e) {
             return ResponseEntity.status(500).body("Échec du téléchargement de l'image");
         }
-    }
+    }*/
 
 
-    @PutMapping(value="/users/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadProfileImage(
-            Authentication authentication,
-            @RequestParam("image") MultipartFile image) {
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
-        try {
-            // Récupérer le nom d'utilisateur à partir du token JWT
-            String username = authentication.getName();
+    @PostMapping("/user/upload-image")
+    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
+        // Vérifie si le fichier est valide
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("Aucun fichier sélectionné.");
+        }
 
-            User user = userRepository.findByusername(username);
-            if (user == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Utilisateur non trouvé");
-            }
+        // Créer le répertoire si nécessaire
+        File uploadDirFile = new File(uploadDir);
+        if (!uploadDirFile.exists()) {
+            uploadDirFile.mkdirs(); // Crée le dossier si il n'existe pas
+        }
 
-            if (image.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Le fichier est vide");
-            }
+        // Obtenir le nom du fichier et le chemin complet
+        String fileName = file.getOriginalFilename();
+        Path filePath = Paths.get(uploadDir, fileName);
 
-            // Enregistrer l'image
-            user.setImage(image.getBytes());
+        // Sauvegarder le fichier dans le dossier
+        Files.copy(file.getInputStream(), filePath);
+
+        // Récupérer l'utilisateur actuellement authentifié
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName(); // Récupère le nom d'utilisateur
+        User user = userRepository.findByusername(username); // Récupère l'utilisateur depuis la base de données
+
+        // Vérifie si l'utilisateur existe
+        if (user != null) {
+            // Associer l'image au profil de l'utilisateur
+            user.setImageUrl(fileName); // Sauvegarde le nom de l'image dans l'utilisateur
+
+            // Sauvegarder l'utilisateur mis à jour
             userRepository.save(user);
 
-            return ResponseEntity.ok("Image uploaded successfully.");
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Échec du téléchargement de l'image.");
+            return ResponseEntity.ok("Fichier téléchargé et associé à l'utilisateur avec succès : " + fileName);
+        } else {
+            return ResponseEntity.status(404).body("Utilisateur non trouvé.");
         }
     }
 
+    /*@GetMapping("/uploads/{imageName}")
+    public ResponseEntity<UrlResource> getImage(@PathVariable String imageName) throws IOException {
+        Path imagePath = Paths.get("D:/doc/Bureau/PI/Back/src/main/resources/uploads").resolve(imageName);
+        UrlResource resource = new UrlResource(imagePath.toUri());
 
+        if (resource.exists() || resource.isReadable()) {
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                    .contentType(MediaType.IMAGE_JPEG) // Tu peux ajuster selon le type d'image
+                    .body(resource);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }*/
+    private static final String UPLOAD_DIRECTORY = "D:/doc/Bureau/PI/Back/src/main/resources/uploads"; // Vérifie ce chemin
 
+    @GetMapping("/api/auth/uploads/{imageName}")
+    public ResponseEntity<Resource> getImage(@PathVariable String imageName) {
+        // Charger l'image depuis le serveur
+        Path imagePath = Paths.get("D:/doc/Bureau/PI/Back/src/main/resources/uploads").resolve(imageName);
+        Resource resource = new FileSystemResource(imagePath);
+
+        if (resource.exists() && resource.isReadable()) {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG) // Ou MediaType.IMAGE_PNG en fonction du type
+                    .body(resource);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
 
 

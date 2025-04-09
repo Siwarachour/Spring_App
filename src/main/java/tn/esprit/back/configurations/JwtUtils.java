@@ -32,16 +32,16 @@ public class JwtUtils {
         this.userRepository = userRepository;
     }
 
-    // Générer le token en incluant un seul rôle
+
     public String generateToken(int id, String username, String role) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("id", id);     // Ajout de l'ID
-        claims.put("username", username); // Ajout du username
-        claims.put("role", role);         // Ajout du rôle
+        claims.put("id", id);
+        claims.put("username", username);
+        claims.put("role", role);
         return createToken(claims);
     }
 
-   
+
     private String createToken(Map<String, Object> claims) {
         return Jwts.builder()
                 .setClaims(claims)
