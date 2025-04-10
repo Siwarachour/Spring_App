@@ -80,8 +80,8 @@ public class SecurityConfig {
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         var configuration = new org.springframework.web.cors.CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4201")); // Origine autorisée (CORS)
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200","http://localhost:4300"));
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Méthodes autorisées
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type")); // En-têtes autorisés
         configuration.setAllowCredentials(true); // Permet d'envoyer des informations d'identification
