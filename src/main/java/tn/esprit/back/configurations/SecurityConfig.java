@@ -53,11 +53,11 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/assets/profile/**").permitAll()
                         .requestMatchers("/api/auth/user/upload-image").authenticated()
-
+                        .requestMatchers("/application/getall").authenticated()
 
 
                         .requestMatchers("/api/auth/profile/image").authenticated()
-                       .requestMatchers("/api/auth/users").authenticated()
+                       .requestMatchers("/api/auth/users/add").hasRole("ADMIN")
                         .requestMatchers("/api/auth/users/**").authenticated()
                         .requestMatchers("/api/auth/users/{username}/upload-image").permitAll()
 

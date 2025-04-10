@@ -375,6 +375,7 @@ public class AuthController {
 
         @PutMapping("/users/{id}")
         public User updateUser(@PathVariable int id, @RequestBody User user) {
+
             return userService.updateUser(id, user);
         }
 
@@ -387,6 +388,45 @@ public class AuthController {
         public User toggleUserApproval(@PathVariable int id) {
             return userService.toggleApproval(id);
         }
+
+    @PostMapping("/users/add")
+    public ResponseEntity<Map<String, String>> addUser(@RequestBody User user, HttpServletRequest request) {
+        String csrfToken = request.getHeader("X-CSRF-TOKEN");
+        log.info("CSRF Token: {}", csrfToken);
+        log.info("Attempting to add user: {}", user.getUsername());
+
+        Map<String, String> response = new HashMap<>();
+
+        // Check if the username already exists
+        if (userRepository.findByusername(user.getUsername()) != null) {
+            response.put("error", "Username is already in use");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Check if the email already exists
+        if (userRepository.findByEmail(user.getEmail()) != null) {
+            response.put("error", "Email is already in use");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Check if the role exists
+        Role existingRole = roleRepository.findById(user.getRole().getId()).orElse(null);
+        if (existingRole == null) {
+            response.put("error", "Role with id " + user.getRole().getId() + " not found");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Set the role and password
+        user.setRole(existingRole);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setApprouve(true); // Automatically approve the user on registration
+
+        // Save the user to the database
+        userRepository.save(user);
+
+        response.put("message", "User added successfully!");
+        return ResponseEntity.ok(response);
+    }
 
 
 
