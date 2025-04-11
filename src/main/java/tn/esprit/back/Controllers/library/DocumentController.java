@@ -86,6 +86,12 @@ public class DocumentController {
             @RequestParam("status") String status,
             @RequestParam("categoryIds") List<Long> categoryIds) throws IOException {
 
+        // Ensure upload directory exists
+        File uploadDir = new File(UPLOAD_DIR);
+        if (!uploadDir.exists()) {
+            uploadDir.mkdirs();
+        }
+
         // File handling
         String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
         Path filePath = Paths.get(UPLOAD_DIR).resolve(fileName);
