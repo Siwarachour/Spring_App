@@ -1,5 +1,6 @@
 package tn.esprit.back.Entities.User;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -60,10 +61,12 @@ public class User {
 
     // Items que l'utilisateur vend (devenu seller)
     @OneToMany(mappedBy = "seller")
+    @JsonIgnore
     private List<Item> itemsForSale = new ArrayList<>();
 
     // Transactions en tant qu'acheteur
     @OneToMany(mappedBy = "buyer")
+    @JsonIgnore
     private List<Transaction> achats = new ArrayList<>();
 
     // Transactions en tant que vendeur

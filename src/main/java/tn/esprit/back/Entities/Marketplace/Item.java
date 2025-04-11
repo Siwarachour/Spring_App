@@ -8,6 +8,7 @@ import tn.esprit.back.Entities.User.User;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -42,7 +43,10 @@ public class Item {
 
     @ManyToOne
     @JoinColumn(name = "panier_id")
+    @JsonIgnore
     private Panier panier;
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Transaction> transactions = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     private ItemStatus status;

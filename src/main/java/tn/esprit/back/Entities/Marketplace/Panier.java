@@ -1,5 +1,6 @@
 package tn.esprit.back.Entities.Marketplace;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,10 +27,12 @@ public class Panier {
     private String userEmail; // Doit correspondre à user.getEmail()
 
     @OneToMany(mappedBy = "panier", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Item> items = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 
 

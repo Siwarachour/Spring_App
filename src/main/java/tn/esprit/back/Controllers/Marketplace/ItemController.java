@@ -25,15 +25,23 @@ public class ItemController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        Item createdItem = itemService.ajouterItem(item, authentication);
-        return new ResponseEntity<>(createdItem, HttpStatus.CREATED);
+        try {
+            Item createdItem = itemService.ajouterItem(item, authentication);
+            return new ResponseEntity<>(createdItem, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Item> updateItem(@PathVariable Long id, @RequestBody Item item) {
-        item.setId(id);
-        Item updatedItem = itemService.updateItem(item);
-        return ResponseEntity.ok(updatedItem);
+        try {
+            item.setId(id);
+            Item updatedItem = itemService.updateItem(item);
+            return ResponseEntity.ok(updatedItem);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
     }
 
     @GetMapping
@@ -44,38 +52,62 @@ public class ItemController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Item> getItemById(@PathVariable Long id) {
-        return itemService.getItemById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            return itemService.getItemById(id)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteItem(@PathVariable Long id) {
-        itemService.supprimerItem(id);
-        return ResponseEntity.noContent().build();
+        try {
+            itemService.supprimerItem(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
     }
 
     @GetMapping("/seller/{sellerId}")
     public ResponseEntity<List<Item>> getItemsBySeller(@PathVariable int sellerId) {
-        List<Item> items = itemService.getItemsBySeller(sellerId);
-        return ResponseEntity.ok(items);
+        try {
+            List<Item> items = itemService.getItemsBySeller(sellerId);
+            return ResponseEntity.ok(items);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
     }
 
     @GetMapping("/pending")
     public ResponseEntity<List<Item>> getItemsPendingApproval() {
-        List<Item> items = itemService.getItemsPendingApproval();
-        return ResponseEntity.ok(items);
+        try {
+            List<Item> items = itemService.getItemsPendingApproval();
+            return ResponseEntity.ok(items);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
     }
 
     @PostMapping("/{id}/approve")
     public ResponseEntity<Void> approveItem(@PathVariable Long id) {
-        itemService.approveItem(id);
-        return ResponseEntity.ok().build();
+        try {
+            itemService.approveItem(id);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
     }
 
     @PostMapping("/{id}/reject")
     public ResponseEntity<Void> rejectItem(@PathVariable Long id) {
-        itemService.rejectItem(id);
-        return ResponseEntity.ok().build();
+        try {
+            itemService.rejectItem(id);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
     }
 }

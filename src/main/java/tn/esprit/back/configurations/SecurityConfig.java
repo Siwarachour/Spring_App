@@ -16,7 +16,6 @@ import tn.esprit.back.Services.User.CustomUserDetailsService;
 import tn.esprit.back.filter.JwtFilter;
 
 import java.util.Arrays;
-
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -52,11 +51,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/reset-password").permitAll()
                         .requestMatchers("/api/auth/profile").permitAll()
                         .requestMatchers("/api/users/**").permitAll()
-                        .requestMatchers("/api/items").hasRole("CLIENT")
+                       // .requestMatchers("/api/items/**").permitAll()
+// Items endpoints - GET public, others require auth
+                                .requestMatchers(String.valueOf(HttpMethod.GET), "/api/items/**").permitAll()
+                                .requestMatchers(String.valueOf(HttpMethod.POST), "/api/items").permitAll()
+                                .requestMatchers(String.valueOf(HttpMethod.PUT), "/api/items/**").permitAll()
+                                .requestMatchers(String.valueOf(HttpMethod.DELETE), "/api/items/**").permitAll()
 
-
-
-                        .requestMatchers("/api/auth/profile/image").authenticated()
+                                .requestMatchers("/api/auth/profile/image").authenticated()
                         .requestMatchers("/api/auth/users/upload-image").authenticated()
                         .requestMatchers("/api/auth/users/{username}/upload-image").permitAll()
 
