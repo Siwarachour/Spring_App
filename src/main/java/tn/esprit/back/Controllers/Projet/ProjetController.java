@@ -8,6 +8,7 @@ import tn.esprit.back.Entities.Projet.Tache;
 import tn.esprit.back.Services.Projet.ProjetService;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/projets")
@@ -45,9 +46,12 @@ public class ProjetController {
 
     // LISTE DES PROJETS
     @GetMapping
+
     public ResponseEntity<?> getAllProjets() {
-        return ResponseEntity.ok(projetService.getAllProjets());
+        List<Projet> projets = projetService.getAllProjets();
+        return ResponseEntity.ok(projets); // Les projets avec le nom du créateur seront inclus dans la réponse JSON
     }
+
 
     // LISTE DES TÂCHES D'UN PROJET
     @GetMapping("/{id}/taches")

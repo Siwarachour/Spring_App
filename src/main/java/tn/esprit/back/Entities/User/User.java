@@ -1,9 +1,11 @@
 package tn.esprit.back.Entities.User;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import tn.esprit.back.Entities.Projet.Projet;
+import tn.esprit.back.Entities.Projet.Tache;
 import tn.esprit.back.Entities.Role.Role;
 
 import java.time.LocalDateTime;
@@ -46,6 +48,8 @@ public class User {
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
     @OneToMany(mappedBy = "createur")
+    @JsonIgnore
+
     private List<Projet> projetsCrees;
 
     @Column(nullable = true)
@@ -57,6 +61,17 @@ public class User {
 
     @Column(nullable = true)
     private String imageUrl;  // Ajoute cet attribut
+
+
+    @ManyToMany(mappedBy = "membres")
+    private List<Projet> projetsParticipe;
+
+    @OneToMany(mappedBy = "utilisateur")
+    private List<Tache> tachesAssignees;
+
+
+
+
 
     public String getImageUrl() {
         return imageUrl;

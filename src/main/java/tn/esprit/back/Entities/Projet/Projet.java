@@ -1,5 +1,7 @@
 package tn.esprit.back.Entities.Projet;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Entities.enums.Status;
@@ -22,6 +24,8 @@ public class Projet {
     private LocalDate dateFin;
 
     @ManyToOne
+    @JsonIgnore
+    @JoinColumn(name = "createur_id")
     private User createur;
 
     @ManyToMany
@@ -33,6 +37,9 @@ public class Projet {
 
     @Enumerated(EnumType.STRING)
     private Status status = Status.NOT_BEGIN;
+
+
+
 
     public Status getStatus() {
         return status;
@@ -66,10 +73,10 @@ public class Projet {
         this.membres = membres;
     }
 
-    public User getCreateur() {
-        return createur;
+    @JsonProperty("createurNom")
+    public String getCreateurNom() {
+        return createur != null ? createur.getUsername() : null; // Retourner le nom du créateur
     }
-
     public void setCreateur(User createur) {
         this.createur = createur;
     }

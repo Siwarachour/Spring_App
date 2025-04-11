@@ -25,6 +25,9 @@ public class Tache {
     @Enumerated(EnumType.STRING)
     private Status status = Status.NOT_BEGIN;
 
+
+
+
     public Status getStatus() {
         return status;
     }
