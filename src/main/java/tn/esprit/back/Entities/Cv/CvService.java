@@ -50,5 +50,15 @@ public class CvService {
     public Cv getCvById(int id) {
         return cvRepo.findById(id).orElse(null);
     }
+    public Cv findCvByUsername(String username) {
+        // Find the user by username
+        User user = userRepository.findByUsername(username);
 
+        if (user != null) {
+            // Return the CV associated with the user
+            return cvRepo.findByStudent(user);
+        } else {
+            throw new RuntimeException("User not found");
+        }
+    }
 }

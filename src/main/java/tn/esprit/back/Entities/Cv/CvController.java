@@ -18,6 +18,7 @@ import java.nio.file.Paths;
 public class CvController {
 
     private final CvService cvService;
+
     @PostMapping("/add")
     public Integer addCv(@RequestBody Cv cv) {
         return (Integer) cvService.addCv(cv);
@@ -26,7 +27,6 @@ public class CvController {
     @GetMapping("/download/{id}")
     public ResponseEntity<Object> downloadCv(@PathVariable int id) throws Exception {
         Cv cv = cvService.getCvById(id); // Make sure this method exists in your service
-        System.out.println(cv.getId()+"dddddddd");
         if (cv == null) {
             return ResponseEntity.notFound().build();
         }
@@ -49,4 +49,18 @@ public class CvController {
                 .body(resource);
     }
 
+    // New endpoint to fetch CV by username
+    @GetMapping("/user/{username}")
+    public ResponseEntity<Object> getCvByUsername(@PathVariable String username) {
+        try {
+            Cv cv = cvService.findCvByUsername(username); // Find CV by username
+            if (cv == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            return ResponseEntity.ok(cv); // Return CV if found
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(500).body("Error: " + e.getMessage()); // Handle errors
+        }
+    }
 }

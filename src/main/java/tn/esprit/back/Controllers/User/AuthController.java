@@ -153,7 +153,10 @@ public class AuthController {
                 Map<String, Object> authData = new HashMap<>();
                 authData.put("token", jwtUtils.generateToken(user.getUsername(),role));
                 Authentication authenticationy = SecurityContextHolder.getContext().getAuthentication();
+                Authentication authenticationn = SecurityContextHolder.getContext().getAuthentication();
+                Object principal = authenticationn.getPrincipal();
 
+                System.out.println("Principal judeee: " + principal);
                 // Print the authentication details (for debugging)
                 System.out.println(authenticationy + " haaaaaa");
                 return ResponseEntity.ok(authData);

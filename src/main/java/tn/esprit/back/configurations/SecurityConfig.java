@@ -11,6 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import tn.esprit.back.Services.User.CustomUserDetailsService;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 
@@ -42,21 +44,21 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .csrf(csrf -> csrf.disable())  // Disable CSRF for now (you can enable it based on your use case)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))  // Handle CORS configuration
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))  // Enable CORS
 
                 // Authorize requests
                 .authorizeHttpRequests(auth -> auth
-                        // Allow swagger UI and API docs to be accessed publicly
                         .requestMatchers("/Projetback/swagger-ui/**", "/Projetback/v3/api-docs/**").permitAll()
-                        .requestMatchers("/api/offre/add").permitAll()
-                        // Allow public access to login and registration endpoints
                         .requestMatchers("/Projetback/auth/login", "/Projetback/auth/register").permitAll()
-                        .requestMatchers("/login", "/register").permitAll()  // Public endpoints
-                        .requestMatchers("/Projetback/offre/add").authenticated()  // Require authentication for /offre/add
-
-                        // Allow access to the /offre/add endpoint without authentication (with the correct context path)
-
-                        // Permit all other requests (you can customize based on your needs)
+                        .requestMatchers("/login", "/register").permitAll()
+                        .requestMatchers("/api/auth/register").permitAll()
+                        .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/assets/profile/**").permitAll()
+                        .requestMatchers("/api/auth/user/upload-image").authenticated()
+                        .requestMatchers("/offre/add").permitAll()
+                                .requestMatchers("/cv/*").permitAll()  // Require authentication for /offre/add
+// Require authentication for /offre/add
                         .anyRequest().permitAll()
                 )
                 .addFilterBefore(new JwtFilter(customUserDetailsService, jwtUtils), UsernamePasswordAuthenticationFilter.class); // Add JWT Filter
@@ -64,17 +66,16 @@ public class SecurityConfig {
         return httpSecurity.build();
     }
 
-
-
     @Bean
-    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
-        var configuration = new org.springframework.web.cors.CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true);
-        var source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+    public UrlBasedCorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:4201"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
+        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 }

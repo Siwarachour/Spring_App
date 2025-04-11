@@ -19,28 +19,29 @@ public class OffreService {
     public Long addOffre(Offre offre) {
         // Get the authentication from SecurityContextHolder
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Object principal = authentication.getPrincipal();
-        System.out.println("Principal: " + principal);
 
-        // Check if the authentication object is valid (i.e., the user is authenticated)
-//        if (authentication != null && authentication.isAuthenticated()) {
-        // Ensure we are dealing with the correct principal type
-//            Object principalL = authentication.getPrincipal();
-//            if (principal instanceof org.springframework.security.core.userdetails.User) {
-//                String username = ((org.springframework.security.core.userdetails.User) principal).getUsername();
-//
-//                // Retrieve the user from the UserRepository based on the username
-//                User user = userRepository.findByUsername(username);
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("Unauthenticated access!");
+        }
+        System.out.println();
+        // Get the username of the authenticated user
+        String username = authentication.getName();
+        System.out.println(username);// This will be the username from the JWT
+        System.out.println("Username from JWT: " + username);
+        // Fetch the full User entity from the database
         User user = userRepository.findByUsername("ahmed2");
 
-//                if (user != null) {
-        // Set the connected user as 'rh' (responsible person) for the offer
+        if (user == null) {
+            throw new RuntimeException("User not found: " + username);
+        }
+
+        // Set the connected user as RH of the offer
         offre.setRh(user);
 
         // Save the offer and return its ID
         return (long) offreRepo.save(offre).getId();
-
     }
+
     // Get all offres
     public List<Offre> getAllOffres() {
         return offreRepo.findAll();
