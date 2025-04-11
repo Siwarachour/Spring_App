@@ -428,6 +428,19 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/statistics")
+    public ResponseEntity<Map<String, Long>> getUserStatistics() {
+        long totalUsers = userRepository.count(); // Nombre total d'utilisateurs
+        long approvedUsers = userRepository.countByApprouveTrue(); // Nombre d'utilisateurs approuvés
+        long nonApprovedUsers = userRepository.countByApprouveFalse(); // Nombre d'utilisateurs non approuvés
+
+        Map<String, Long> statistics = new HashMap<>();
+        statistics.put("totalUsers", totalUsers);
+        statistics.put("approvedUsers", approvedUsers);
+        statistics.put("nonApprovedUsers", nonApprovedUsers);
+
+        return ResponseEntity.ok(statistics);
+    }
 
 
 

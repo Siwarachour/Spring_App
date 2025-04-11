@@ -57,7 +57,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/user/upload-image").authenticated()
                         .requestMatchers("/application/getall").authenticated()
 
-
+                        .requestMatchers("/api/auth/statistics").permitAll()
                         .requestMatchers("/api/auth/profile/image").authenticated()
                        .requestMatchers("/api/auth/users/add").hasRole("ADMIN")
                         .requestMatchers("/api/auth/users/**").authenticated()
