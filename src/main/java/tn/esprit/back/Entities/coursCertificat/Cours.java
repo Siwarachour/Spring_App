@@ -30,6 +30,7 @@ public class Cours {
     private NiveauCours niveau;
 
     @OneToOne(cascade = CascadeType.ALL)
+    @JsonManagedReference
     private Certificat certificat;
 
     @OneToOne(cascade = CascadeType.ALL)

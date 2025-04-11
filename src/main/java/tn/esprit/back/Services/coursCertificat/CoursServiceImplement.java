@@ -126,5 +126,14 @@ public class CoursServiceImplement implements ICoursService {
         return fileName;
     }
 
+    @Override
+    public Cours getCoursByTestId(long testId) {
+        Test test = testRepository.findById(testId).orElse(null);
+        if (test != null) {
+            return coursRepository.findByTest(test);
+        }
+        return null;
+    }
+
 
 }

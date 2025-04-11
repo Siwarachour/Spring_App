@@ -22,4 +22,7 @@ public interface ICoursService {
 
     public String saveImage(MultipartFile file) throws IOException;
     public String saveDocument(MultipartFile file) throws IOException;
+
+    Cours getCoursByTestId(long testId);
+
 }

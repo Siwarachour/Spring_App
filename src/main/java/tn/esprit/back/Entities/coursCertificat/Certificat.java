@@ -1,6 +1,7 @@
 package tn.esprit.back.Entities.coursCertificat;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 @Entity
@@ -18,6 +19,7 @@ public class Certificat {
     private NiveauCertificat niveau;
 
     @OneToOne(mappedBy = "certificat")
+    @JsonBackReference
     private Cours cours;
 
     public long getId() {

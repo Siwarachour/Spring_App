@@ -32,6 +32,18 @@ public class CoursController {
     Cours getCoursById(@PathVariable long idcours) {
         return coursService.getCoursById(idcours);
     }
+
+    @GetMapping("/getCoursByTestId/{testId}")
+    public ResponseEntity<Cours> getCoursByTestId(@PathVariable long testId) {
+        Cours cours = coursService.getCoursByTestId(testId);
+        if (cours != null) {
+            return ResponseEntity.ok(cours);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
     @DeleteMapping("/deleteCours/{idcours}")
     Cours deleteCours(@PathVariable long idcours) {
         coursService.deleteCours(idcours);

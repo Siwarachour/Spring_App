@@ -3,6 +3,7 @@ package tn.esprit.back.Entities.coursCertificat;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -31,7 +32,8 @@ public class Test {
     @ElementCollection
     @CollectionTable(name = "test_correct_answers", joinColumns = @JoinColumn(name = "test_id"))
     @Column(name = "correct_index")
-    private List<Integer> correctAnswerIndices;  // Indices des bonnes réponses
+    @JsonProperty("correctAnswers")
+    private List<Integer> correctAnswers;  // Indices des bonnes réponses
 
     @OneToOne(mappedBy = "test")
     //@JsonIgnore  // Ignorer la référence inverse
@@ -86,11 +88,11 @@ public class Test {
         this.choices = choices;
     }
 
-    public List<Integer> getCorrectAnswers() {
-        return correctAnswerIndices;
+    public List<Integer> correctAnswers() {
+        return correctAnswers;
     }
 
-    public void setCorrectAnswers(List<Integer> correctAnswers) {
-        this.correctAnswerIndices = correctAnswers;
+    public void correctAnswers(List<Integer> correctAnswers) {
+        this.correctAnswers = correctAnswers;
     }
 }
