@@ -16,10 +16,7 @@ public class CvService {
 
     public Object addCv(Cv cv) {
         // Temporarily hardcoded username; you can later replace with dynamic user extraction
-        User user = userRepository.findByUsername("ahmed2");
 
-        if (user != null) {
-            cv.setStudent(user);
 
             // 1. Save CV first to get its ID
             Cv savedCv = cvRepo.save(cv);
@@ -42,9 +39,7 @@ public class CvService {
                 e.printStackTrace();
                 throw new RuntimeException("Failed to generate CV PDF");
             }
-        } else {
-            throw new RuntimeException("User not found");
-        }
+
     }
 
     public Cv getCvById(int id) {

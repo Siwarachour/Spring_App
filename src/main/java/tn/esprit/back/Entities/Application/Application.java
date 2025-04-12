@@ -34,7 +34,6 @@ private User student;
     private String motivatedlettre;
 
      @ManyToOne
-     @JsonIgnore
      Offre offre;
 
      @Enumerated(EnumType.STRING)
@@ -54,14 +53,20 @@ private User student;
     @OneToOne(fetch = FetchType.EAGER)
     @JsonInclude(JsonInclude.Include.NON_NULL)  // Ensure it's included when not null
     private Cv cv;
+    @JsonGetter("offreId")
+    public Integer getOffreId() {
+        return offre != null ? offre.getId() : null;
+    }
+    @JsonGetter("cvid")
+    public Integer getCvid() {
+        return cv != null ? cv.getId() : null;
+    }
+
     @JsonGetter("pdfDownloadLink")
     public String getCvLinkPdf() {
         return  cv.getPdfDownloadLink() ;
     }
-    @JsonGetter("id")
-    public Integer getCvid() {
-        return  cv.getId() ;
-    }
+
     @CreatedBy
     @Column(insertable = false)
     private Integer createdBy;

@@ -50,17 +50,18 @@ public class CvController {
     }
 
     // New endpoint to fetch CV by username
+
     @GetMapping("/user/{username}")
     public ResponseEntity<Object> getCvByUsername(@PathVariable String username) {
         try {
             Cv cv = cvService.findCvByUsername(username); // Find CV by username
             if (cv == null) {
-                return ResponseEntity.notFound().build();
+                return ResponseEntity.notFound().build(); // Return 404 if CV not found
             }
-
-            return ResponseEntity.ok(cv); // Return CV if found
+            return ResponseEntity.ok(cv); // Return 200 with CV if found
         } catch (RuntimeException e) {
-            return ResponseEntity.status(500).body("Error: " + e.getMessage()); // Handle errors
+            // Return a 500 status with the error message if an exception occurs
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
         }
     }
 }

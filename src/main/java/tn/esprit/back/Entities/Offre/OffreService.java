@@ -29,14 +29,8 @@ public class OffreService {
         System.out.println(username);// This will be the username from the JWT
         System.out.println("Username from JWT: " + username);
         // Fetch the full User entity from the database
-        User user = userRepository.findByUsername("ahmed2");
 
-        if (user == null) {
-            throw new RuntimeException("User not found: " + username);
-        }
 
-        // Set the connected user as RH of the offer
-        offre.setRh(user);
 
         // Save the offer and return its ID
         return (long) offreRepo.save(offre).getId();
