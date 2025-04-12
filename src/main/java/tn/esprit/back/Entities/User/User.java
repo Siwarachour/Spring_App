@@ -41,28 +41,50 @@ public class User {
     private String address;
     @Temporal(TemporalType.DATE)
     private Date birthday;
-    private boolean enabled = true;
+    private boolean enabled = true; // Default to true for new users
     private boolean accountLocked = false;
     @Column(nullable = true)
     private String resetToken;
 
+    //private String role;
+
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
-
     @OneToMany(mappedBy = "createur")
     private List<Projet> projetsCrees;
+
+    @Column(nullable = true)
+    private boolean approuve = true; // Par défaut non approuvé
+
 
     @ManyToMany
     private List<Projet> projetsParticipes;
 
-    @Lob
-    private byte[] image;
+    @Column(nullable = true)
+    private String imageUrl;  // Ajoute cet attribut
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+
+    public boolean isApprouve() {
+        return approuve;
+    }
     // Items que l'utilisateur vend (devenu seller)
     @OneToMany(mappedBy = "seller")
     @JsonIgnore
     private List<Item> itemsForSale = new ArrayList<>();
+
+    public void setApprouve(boolean approuve) {
+        this.approuve = approuve;
+    }
+
 
     // Transactions en tant qu'acheteur
     @OneToMany(mappedBy = "buyer")
