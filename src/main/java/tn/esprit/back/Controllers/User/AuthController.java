@@ -136,7 +136,7 @@ public class AuthController {
                 System.out.println("Authenticated User: " + username);
 
                 Map<String, Object> authData = new HashMap<>();
-                authData.put("token", jwtUtils.generateToken(user.getId(), user.getUsername(), role));
+                authData.put("token", jwtUtils.generateToken(user.getId(), user.getUsername(), role,user.getImageUrl()));
                 Authentication authenticationy = SecurityContextHolder.getContext().getAuthentication();
 
 
