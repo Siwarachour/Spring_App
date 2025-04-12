@@ -65,7 +65,7 @@ public class User implements UserDetails, Principal {
     // UserDetails methods
     @Override
     public String getUsername() {
-        return username;  // Return the username for UserDetails
+        return (cv != null) ? cv.getName() : username;  // Use the username if cv is null
     }
 
     @Override

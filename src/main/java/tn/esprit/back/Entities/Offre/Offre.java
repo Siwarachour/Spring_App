@@ -41,7 +41,7 @@ public class Offre {
         this.rh = rh;
     }
 
-    // Allow applications to be nullable
+    @JsonIgnore
     @OneToMany(mappedBy = "offre", cascade = CascadeType.ALL)
     private Set<Application> applications;
 
