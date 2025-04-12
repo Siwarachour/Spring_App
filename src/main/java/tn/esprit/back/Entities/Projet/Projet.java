@@ -1,6 +1,7 @@
 package tn.esprit.back.Entities.Projet;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import tn.esprit.back.Entities.User.User;
@@ -13,7 +14,6 @@ import java.util.List;
 public class Projet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private int idProjet;
     private String nomProjet;
     private String description;
@@ -32,6 +32,7 @@ public class Projet {
     private List<User> membres = new ArrayList<>();
 
     @OneToMany(mappedBy = "projet", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Tache> taches = new ArrayList<>();
 
 

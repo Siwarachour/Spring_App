@@ -63,8 +63,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/users/**").authenticated()
                         .requestMatchers("/api/auth/users/{username}/upload-image").permitAll()
                                 .requestMatchers("/api/projets").authenticated()
+                        .requestMatchers("/api/projets/**").authenticated()
 
-                       
+                        .requestMatchers("/api/taches").authenticated()
+                        .requestMatchers("/api/taches/**").authenticated()
+
+
 
                         .requestMatchers("/api/auth/users/{id}/roles").hasRole("ADMIN")
 

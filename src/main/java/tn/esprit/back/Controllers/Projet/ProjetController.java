@@ -1,6 +1,7 @@
 package tn.esprit.back.Controllers.Projet;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.back.Entities.Projet.Projet;
@@ -45,7 +46,8 @@ public class ProjetController {
     }
 
     // LISTE DES PROJETS
-    @GetMapping
+    @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
+
 
     public ResponseEntity<?> getAllProjets() {
         List<Projet> projets = projetService.getAllProjets();
@@ -57,6 +59,11 @@ public class ProjetController {
     @GetMapping("/{id}/taches")
     public ResponseEntity<?> getTachesDuProjet(@PathVariable int id) {
         return ResponseEntity.ok(projetService.getTachesDuProjet(id));
+    }
+
+    @GetMapping("/taches")
+    public List<Tache> getAllTaches() {
+        return projetService.getAllTaches();
     }
 
 }

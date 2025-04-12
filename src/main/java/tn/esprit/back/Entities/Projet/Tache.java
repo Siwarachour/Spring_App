@@ -1,5 +1,7 @@
 package tn.esprit.back.Entities.Projet;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Entities.enums.Status;
@@ -17,9 +19,11 @@ public class Tache {
     private LocalDate dateFin;
 
     @ManyToOne
+    @JsonBackReference
     private Projet projet;
 
     @ManyToOne
+
     private User utilisateur; // Assignée lors de participation
 
     @Enumerated(EnumType.STRING)
