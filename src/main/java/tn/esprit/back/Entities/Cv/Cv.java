@@ -39,9 +39,10 @@ public class Cv {
         return pdfDownloadLink;
     }
     @JsonGetter("username")
-    public String getstudentname() {
-        return  student.getUsername() ;
+    public String getStudentname() {
+        return student != null ? student.getUsername() : "Unknown"; // Or null, depending on your requirements
     }
+
     @OneToOne
     @JsonIgnore
 

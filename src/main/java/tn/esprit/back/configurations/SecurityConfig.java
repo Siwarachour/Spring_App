@@ -56,7 +56,7 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/assets/profile/**").permitAll()
                         .requestMatchers("/api/auth/user/upload-image").authenticated()
-                        .requestMatchers("/offre/add").permitAll()
+                        .requestMatchers("/offre/*").permitAll()
                                 .requestMatchers("/cv/*").permitAll()  // Require authentication for /offre/add
 // Require authentication for /offre/add
                         .anyRequest().permitAll()

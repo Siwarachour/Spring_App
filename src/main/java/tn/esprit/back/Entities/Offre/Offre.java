@@ -29,6 +29,8 @@ public class Offre {
 
     private String skills;
 
+    private String imageUrl;  // 💡 chemin ou lien vers l'image uploadée
+
     @CreatedBy
     @Column(insertable = false)
     private Integer createdBy;
@@ -45,9 +47,9 @@ public class Offre {
     @OneToMany(mappedBy = "offre", cascade = CascadeType.ALL)
     private Set<Application> applications;
 
-    // You can add a default constructor if needed (default empty set for applications)
+    // 🧠 Initialisation pour éviter les NullPointer
     public Offre() {
-        this.applications = new HashSet<>(); // Initialize to an empty set to avoid null issues
+        this.applications = new HashSet<>();
     }
 
 }
