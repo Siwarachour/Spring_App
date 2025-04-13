@@ -1,5 +1,8 @@
 package tn.esprit.back.Controllers.library;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,11 +14,15 @@ import tn.esprit.back.Repository.library.DocumentRepository;
 import tn.esprit.back.Services.library.IDocument;
 import tn.esprit.back.Services.library.CloudinaryService;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 
 @RestController
@@ -71,14 +78,17 @@ public class DocumentController {
     public List<Document> getAllDocument() {
         return documentService.getAllDocument();
     }
+
     @GetMapping("/retrieve/{idDocument}")
     public Document getDocumentById(@PathVariable long idDocument) {
         return documentService.getDocumentById(idDocument);
     }
+
     @DeleteMapping("/delete/{idDocument}")
     public void deleteDocument(@PathVariable long idDocument) {
         documentService.deleteDocument(idDocument);
     }
+
     @PostMapping("/add")
     public ResponseEntity<Document> addDocument(
             @RequestParam("file") MultipartFile file,
@@ -119,17 +129,41 @@ public class DocumentController {
     }
 
 
-
     @PostMapping("/addWithUser/{userId}")
     public Document addDocumentWithUser(@RequestBody Document document, @PathVariable Long userId) {
         return documentService.addDocumentWithUser(document, userId);
     }
+
     @PutMapping("/affectReview/{idDocument}/{idReview}")
     public Document affectReviewToDocument(@PathVariable Long idDocument, @PathVariable Long idReview) {
         return documentService.assignReviewToDocument(idDocument, idReview);
     }
+
     @PutMapping("/affectCategory/{idDocument}/{idCategory}")
     public Document affectCategoryToDocument(@PathVariable Long idDocument, @PathVariable Long idCategory) {
         return documentService.addDocumentToCategory(idDocument, idCategory);
     }
+
+    @GetMapping("/{id}/text")
+    public ResponseEntity<String> extractText(@PathVariable Long id) {
+        Optional<Document> doc = documentRepository.findById(id);
+        if (doc.isPresent()) {
+            String fileUrl = doc.get().getFileUrl();
+            try (InputStream input = new URL(fileUrl).openStream();
+                 PDDocument pdf = PDDocument.load(input)) {
+
+                PDFTextStripper stripper = new PDFTextStripper();
+                String text = stripper.getText(pdf);
+                return ResponseEntity.ok(text);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Error extracting PDF text: " + e.getMessage());
+            }
+        }
+        return ResponseEntity.notFound().build();
+    }
+
 }
+

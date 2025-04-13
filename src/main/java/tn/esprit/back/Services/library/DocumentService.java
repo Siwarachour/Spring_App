@@ -36,7 +36,16 @@ public class DocumentService implements IDocument {
     }
     @Override
     public void deleteDocument(long idDocument) {
-        documentRepository.deleteById(idDocument);
+        Document document = documentRepository.findById(idDocument)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+
+        // Remove associations with categories
+        for (Category category : document.getCategories()) {
+            category.getDocuments().remove(document);
+        }
+        document.getCategories().clear();
+
+        documentRepository.delete(document);
     }
     @Override
     public List<Document> getAllDocument() {
