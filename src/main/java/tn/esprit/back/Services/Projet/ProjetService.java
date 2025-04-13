@@ -155,4 +155,7 @@ public class ProjetService {
         tacheRepo.deleteById(id);
     }
 
+    public List<Tache> getAllTaches() {
+        return tacheRepo.findAll();
+    }
 }

@@ -1,7 +1,5 @@
 package tn.esprit.back.Controllers.User;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,26 +9,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.back.Entities.Role.Role;
@@ -38,7 +30,6 @@ import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Entities.User.UserProfile;
 import tn.esprit.back.Repository.User.UserRepository;
 import tn.esprit.back.Requests.ForgotPasswordRequest;
-import tn.esprit.back.Requests.JwtResponce;
 import tn.esprit.back.Requests.LoginRequests;
 import tn.esprit.back.Services.User.RoleService;
 import tn.esprit.back.Services.User.UserService;
@@ -49,9 +40,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -136,7 +125,7 @@ public class AuthController {
                 System.out.println("Authenticated User: " + username);
 
                 Map<String, Object> authData = new HashMap<>();
-                authData.put("token", jwtUtils.generateToken(user.getId(), user.getUsername(), role));
+                authData.put("token", jwtUtils.generateToken(user.getId(), user.getUsername(), role,user.getImageUrl()));
                 Authentication authenticationy = SecurityContextHolder.getContext().getAuthentication();
 
 
@@ -266,8 +255,9 @@ public class AuthController {
                 user.getEmail(),
                 user.getFirstName(),
                 user.getLastName(),
-                imageUrl
-        );
+                user.getPhone(),
+                imageUrl,
+                user.getProjetsCrees());
 
         return ResponseEntity.ok(profile);
     }
@@ -284,11 +274,14 @@ public class AuthController {
         }
 
         UserProfile profile = new UserProfile(
-                user.getUsername(),
                 user.getEmail(),
                 user.getFirstName(),
                 user.getLastName(),
-                imageUrl
+                imageUrl,
+                user.getAddress(),
+                user.getPhone(),
+                user.getProjetsCrees()
+
         );
 
         return ResponseEntity.ok(profile);
@@ -356,6 +349,38 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request) {
+        String oldPassword = request.getOldPassword();
+        String newPassword = request.getNewPassword();
+        String confirmNewPassword = request.getConfirmNewPassword();
+
+        // Vérification que les mots de passe correspondent
+        if (!newPassword.equals(confirmNewPassword)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Les nouveaux mots de passe ne correspondent pas.");
+        }
+
+        // Obtenez l'utilisateur actuel à partir de l'authentification
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        // Récupérer l'utilisateur à partir du nom d'utilisateur
+        User user = userRepository.findByusername(username);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Utilisateur non trouvé.");
+        }
+
+        // Vérifier si l'ancien mot de passe est correct
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("L'ancien mot de passe est incorrect.");
+        }
+
+        // Encoder le nouveau mot de passe et mettre à jour l'utilisateur
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        return ResponseEntity.ok("Mot de passe changé avec succès.");
+    }
 
 
 
@@ -366,7 +391,8 @@ public class AuthController {
 
 
 
-        private final UserService userService;
+
+    private final UserService userService;
 
         @GetMapping("/users")
         public List<User> getAllUsers() {

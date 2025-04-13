@@ -1,5 +1,8 @@
 package tn.esprit.back.Entities.Projet;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Entities.enums.Status;
@@ -11,28 +14,43 @@ import java.util.List;
 public class Projet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private int idProjet;
     private String nomProjet;
     private String description;
     private int nbreGestions; // max taches
     private int nbreMembreDisponible = 0;
-
+private String image;
     private LocalDate dateDebut;
     private LocalDate dateFin;
 
     @ManyToOne
+    @JsonIgnore
+    @JoinColumn(name = "createur_id")
     private User createur;
 
     @ManyToMany
     private List<User> membres = new ArrayList<>();
 
     @OneToMany(mappedBy = "projet", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Tache> taches = new ArrayList<>();
 
 
     @Enumerated(EnumType.STRING)
     private Status status = Status.NOT_BEGIN;
+
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public User getCreateur() {
+        return createur;
+    }
 
     public Status getStatus() {
         return status;
@@ -66,10 +84,10 @@ public class Projet {
         this.membres = membres;
     }
 
-    public User getCreateur() {
-        return createur;
+    @JsonProperty("createurNom")
+    public String getCreateurNom() {
+        return createur != null ? createur.getUsername() : null; // Retourner le nom du créateur
     }
-
     public void setCreateur(User createur) {
         this.createur = createur;
     }

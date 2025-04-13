@@ -1,20 +1,53 @@
 package tn.esprit.back.Entities.User;
 
-public class UserProfile {
-    private String username;
-    private String email;
-    private String firstName;
-    private String lastName;
-    private String imageUrl;
+import tn.esprit.back.Entities.Projet.Projet;
 
-    public UserProfile(String username, String email, String firstName, String lastName ,String imageUrl) {
-        this.username = username;
+import java.util.List;
+
+public class UserProfile {
+
+    private String email;
+    private String FirstName;
+    private String LastName;
+    private String imageUrl;
+    private List<Projet> projetsCrees;
+private String address;
+    private String phone;
+
+    public UserProfile( String email, String FirstName, String LastName , String imageUrl,String Address, String Phone,List<Projet> projetsCrees) {
         this.email = email;
-        this.firstName = firstName;
-        this.lastName = lastName;
+        this.FirstName = FirstName;
+        this.LastName = LastName;
         this.imageUrl = imageUrl;
+        this.address = Address;
+        this.phone = Phone;
+
+        this.projetsCrees = projetsCrees;
     }
 
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public List<Projet> getProjetsCrees() {
+        return projetsCrees;
+    }
+
+    public void setProjetsCrees(List<Projet> projetsCrees) {
+        this.projetsCrees = projetsCrees;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 
     public String getImageUrl() {
         return imageUrl;
@@ -24,13 +57,6 @@ public class UserProfile {
         this.imageUrl = imageUrl;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
     public String getEmail() {
         return email;
@@ -41,18 +67,18 @@ public class UserProfile {
     }
 
     public String getFirstName() {
-        return firstName;
+        return FirstName;
     }
 
     public void setFirstName(String firstName) {
-        this.firstName = firstName;
+        this.FirstName = firstName;
     }
 
     public String getLastName() {
-        return lastName;
+        return LastName;
     }
 
     public void setLastName(String lastName) {
-        this.lastName = lastName;
+        this.LastName = lastName;
     }
 }

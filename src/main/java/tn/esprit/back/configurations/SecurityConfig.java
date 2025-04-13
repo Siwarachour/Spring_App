@@ -47,6 +47,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))  // Remplace "cors()" avec la nouvelle méthode
                 .csrf(csrf -> csrf.disable())  // Remplace "csrf()" avec la nouvelle méthode
                 .authorizeHttpRequests(auth -> auth
+
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
@@ -73,6 +74,11 @@ public class SecurityConfig {
                                 .requestMatchers("/api/auth/profile/image").authenticated()
                         .requestMatchers("/api/auth/users/upload-image").authenticated()
                         .requestMatchers("/api/auth/users/{username}/upload-image").permitAll()
+                                .requestMatchers("/api/projets").permitAll()
+                        .requestMatchers("/api/projets/**").authenticated()
+
+                        .requestMatchers("/api/taches").authenticated()
+                        .requestMatchers("/api/taches/**").authenticated()
 
 
 

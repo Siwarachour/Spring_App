@@ -1,6 +1,7 @@
 package tn.esprit.back.Controllers.Projet;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.back.Entities.Projet.Projet;
@@ -8,6 +9,7 @@ import tn.esprit.back.Entities.Projet.Tache;
 import tn.esprit.back.Services.Projet.ProjetService;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/projets")
@@ -44,15 +46,24 @@ public class ProjetController {
     }
 
     // LISTE DES PROJETS
-    @GetMapping
+    @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
+
+
     public ResponseEntity<?> getAllProjets() {
-        return ResponseEntity.ok(projetService.getAllProjets());
+        List<Projet> projets = projetService.getAllProjets();
+        return ResponseEntity.ok(projets); // Les projets avec le nom du créateur seront inclus dans la réponse JSON
     }
+
 
     // LISTE DES TÂCHES D'UN PROJET
     @GetMapping("/{id}/taches")
     public ResponseEntity<?> getTachesDuProjet(@PathVariable int id) {
         return ResponseEntity.ok(projetService.getTachesDuProjet(id));
+    }
+
+    @GetMapping("/taches")
+    public List<Tache> getAllTaches() {
+        return projetService.getAllTaches();
     }
 
 }

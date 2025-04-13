@@ -7,6 +7,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import tn.esprit.back.Entities.Projet.Projet;
 import tn.esprit.back.Entities.Marketplace.Item;
 import tn.esprit.back.Entities.Marketplace.Transaction;
+import tn.esprit.back.Entities.Projet.Tache;
 import tn.esprit.back.Entities.Role.Role;
 
 import java.util.ArrayList;
@@ -26,6 +27,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
     @Getter
     private String username;
     @Getter
@@ -45,13 +47,15 @@ public class User {
     private boolean accountLocked = false;
     @Column(nullable = true)
     private String resetToken;
-
+private String description;
     //private String role;
 
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
     @OneToMany(mappedBy = "createur")
+    @JsonIgnore
+
     private List<Projet> projetsCrees;
 
     @Column(nullable = true)
@@ -63,6 +67,38 @@ public class User {
 
     @Column(nullable = true)
     private String imageUrl;  // Ajoute cet attribut
+
+
+    @ManyToMany(mappedBy = "membres")
+    private List<Projet> projetsParticipe;
+
+    @OneToMany(mappedBy = "utilisateur")
+    private List<Tache> tachesAssignees;
+
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public List<Projet> getProjetsParticipe() {
+        return projetsParticipe;
+    }
+
+    public void setProjetsParticipe(List<Projet> projetsParticipe) {
+        this.projetsParticipe = projetsParticipe;
+    }
+
+    public List<Tache> getTachesAssignees() {
+        return tachesAssignees;
+    }
+
+    public void setTachesAssignees(List<Tache> tachesAssignees) {
+        this.tachesAssignees = tachesAssignees;
+    }
 
     public String getImageUrl() {
         return imageUrl;
