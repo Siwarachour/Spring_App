@@ -4,10 +4,13 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CvPdfGenerator {
 
@@ -75,9 +78,44 @@ public class CvPdfGenerator {
         document.add(contactTitle);
         document.add(new Paragraph(cv.getContactinfo()));
 
+        // Extract all words from the CV content
+        List<String> words = extractWords(cv);
+        System.out.println("All words in the CV: " + words);
+
+        // Store the extracted words in the Cv entity
+        cv.setExtractedWords(words);  // Set the extracted words in the Cv entity
+
+        // Save the CV entity to the database (assuming you have a repository or service to do this)
+        // cvRepository.save(cv);  // Uncomment and use your repository to save the Cv
+
         // Close the document
         document.close();
 
         return fileName;
     }
+
+    private static List<String> extractWords(Cv cv) {
+        List<String> words = new ArrayList<>();
+        // Extract words from all sections of the CV
+        extractWordsFromText(cv.getName(), words);
+        extractWordsFromText(cv.getSkills(), words);
+        extractWordsFromText(cv.getExperience(), words);
+        extractWordsFromText(cv.getEducation(), words);
+        extractWordsFromText(cv.getContactinfo(), words);
+
+        return words;
+    }
+
+    private static void extractWordsFromText(String text, List<String> words) {
+        if (text != null && !text.trim().isEmpty()) {
+            // Split the text into words and add them to the list
+            String[] wordArray = text.toLowerCase().split("\\W+");
+            for (String word : wordArray) {
+                if (!word.isEmpty()) {
+                    words.add(word);  // Add non-empty words to the list
+                }
+            }
+        }
+    }
+
 }

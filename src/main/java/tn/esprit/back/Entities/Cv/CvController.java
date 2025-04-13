@@ -19,11 +19,13 @@ public class CvController {
 
     private final CvService cvService;
 
+    // Method to add CV (already existing)
     @PostMapping("/add")
     public Integer addCv(@RequestBody Cv cv) {
         return (Integer) cvService.addCv(cv);
     }
 
+    // Method for downloading the CV (already existing)
     @GetMapping("/download/{id}")
     public ResponseEntity<Object> downloadCv(@PathVariable int id) throws Exception {
         Cv cv = cvService.getCvById(id); // Make sure this method exists in your service
@@ -49,8 +51,7 @@ public class CvController {
                 .body(resource);
     }
 
-    // New endpoint to fetch CV by username
-
+    // Method to fetch CV by username (already existing)
     @GetMapping("/user/{username}")
     public ResponseEntity<Object> getCvByUsername(@PathVariable String username) {
         try {
@@ -64,4 +65,16 @@ public class CvController {
             return ResponseEntity.status(500).body("Error: " + e.getMessage());
         }
     }
+
+    // New method for viewing CV as PDF (not downloading)
+    @GetMapping("/view/{id}")
+    public ResponseEntity<InputStreamResource> viewCv(@PathVariable int id) {
+        try {
+            // Call the service method
+            return cvService.getCvPdfForViewing(id);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
+
 }
