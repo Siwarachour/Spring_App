@@ -1,5 +1,4 @@
 package tn.esprit.back.Controllers.library;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -8,9 +7,10 @@ import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.back.Entities.library.Document;
 import tn.esprit.back.Entities.library.DocumentStatus;
 import tn.esprit.back.Entities.library.DocumentType;
+import tn.esprit.back.Repository.library.DocumentRepository;
 import tn.esprit.back.Services.library.IDocument;
+import tn.esprit.back.Services.library.CloudinaryService;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,6 +25,10 @@ public class DocumentController {
 
     @Autowired
     IDocument documentService;
+    @Autowired
+    private CloudinaryService cloudinaryService;
+    @Autowired
+    private DocumentRepository documentRepository;
 
     private static final String UPLOAD_DIR = "uploads/";
 
@@ -75,7 +79,6 @@ public class DocumentController {
     public void deleteDocument(@PathVariable long idDocument) {
         documentService.deleteDocument(idDocument);
     }
-
     @PostMapping("/add")
     public ResponseEntity<Document> addDocument(
             @RequestParam("file") MultipartFile file,
@@ -84,18 +87,16 @@ public class DocumentController {
             @RequestParam("documentType") String documentType,
             @RequestParam("keywords") String keywords,
             @RequestParam("status") String status,
-            @RequestParam("categoryIds") List<Long> categoryIds) throws IOException {
+            @RequestParam("categoryIds") List<Long> categoryIds) {
 
-        // Ensure upload directory exists
-        File uploadDir = new File(UPLOAD_DIR);
-        if (!uploadDir.exists()) {
-            uploadDir.mkdirs();
+        // Upload the file to Cloudinary
+        String fileUrl = cloudinaryService.uploadFile(file, "documents");  // Customize folder name if needed
+        if (fileUrl == null) {
+            // Return a failure response, but the body must still be a Document (with appropriate error handling)
+            Document errorDocument = new Document();
+            errorDocument.setTitle("File upload failed");
+            return ResponseEntity.badRequest().body(errorDocument);
         }
-
-        // File handling
-        String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        Path filePath = Paths.get(UPLOAD_DIR).resolve(fileName);
-        Files.copy(file.getInputStream(), filePath);
 
         // Document creation
         Document document = new Document();
@@ -104,9 +105,10 @@ public class DocumentController {
         document.setDocumentType(DocumentType.valueOf(documentType));
         document.setKeywords(keywords);
         document.setStatus(DocumentStatus.valueOf(status));
-        document.setFileUrl(filePath.toString());
+        document.setFileUrl(fileUrl);  // Use the Cloudinary URL instead of local file path
 
-        Document savedDocument = documentService.addDocument(document);
+        // Save the document
+        Document savedDocument = documentRepository.save(document);
 
         // Assign categories
         categoryIds.forEach(categoryId -> {
@@ -115,6 +117,7 @@ public class DocumentController {
 
         return ResponseEntity.ok(savedDocument);
     }
+
 
 
     @PostMapping("/addWithUser/{userId}")
