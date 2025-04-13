@@ -13,7 +13,6 @@ public class Certificat {
     private String nom;
     private String instructeur;
     private int validite;
-    private int statut;
 
     @Enumerated(EnumType.STRING)
     private NiveauCertificat niveau;
@@ -52,14 +51,6 @@ public class Certificat {
 
     public void setValidite(int validite) {
         this.validite = validite;
-    }
-
-    public int getStatut() {
-        return statut;
-    }
-
-    public void setStatut(int statut) {
-        this.statut = statut;
     }
 
     public NiveauCertificat getNiveau() {

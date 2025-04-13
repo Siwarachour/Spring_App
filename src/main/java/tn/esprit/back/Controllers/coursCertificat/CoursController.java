@@ -119,7 +119,6 @@ public class CoursController {
             @RequestParam("certNom") String certNom,
             @RequestParam("certInstructeur") String certInstructeur,
             @RequestParam("certValidite") int certValidite,
-            @RequestParam("certStatus") int certStatus,
             @RequestParam("certNiveau") NiveauCertificat certNiveau,
             @RequestParam("testContenu") String testContenu,
             @RequestParam("testScore") double testScore,
@@ -150,7 +149,6 @@ public class CoursController {
             certificat.setNom(certNom);
             certificat.setInstructeur(certInstructeur);
             certificat.setValidite(certValidite);
-            certificat.setStatut(certStatus);
             certificat.setNiveau(certNiveau);
 
             // Création du test
