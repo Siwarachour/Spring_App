@@ -27,6 +27,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
     private String username;
     private String password;
     private String firstName;
@@ -41,7 +42,7 @@ public class User {
     private boolean accountLocked = false;
     @Column(nullable = true)
     private String resetToken;
-
+private String description;
     //private String role;
 
     @ManyToOne
@@ -70,8 +71,29 @@ public class User {
     private List<Tache> tachesAssignees;
 
 
+    public String getDescription() {
+        return description;
+    }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
+    public List<Projet> getProjetsParticipe() {
+        return projetsParticipe;
+    }
+
+    public void setProjetsParticipe(List<Projet> projetsParticipe) {
+        this.projetsParticipe = projetsParticipe;
+    }
+
+    public List<Tache> getTachesAssignees() {
+        return tachesAssignees;
+    }
+
+    public void setTachesAssignees(List<Tache> tachesAssignees) {
+        this.tachesAssignees = tachesAssignees;
+    }
 
     public String getImageUrl() {
         return imageUrl;

@@ -17,7 +17,9 @@ public class Tache {
     private String nomTache;
     private LocalDate dateDebut;
     private LocalDate dateFin;
-
+private  String description;
+private String image;
+private String language;
     @ManyToOne
     @JsonBackReference
     private Projet projet;
@@ -30,7 +32,29 @@ public class Tache {
     private Status status = Status.NOT_BEGIN;
 
 
+    public String getDescription() {
+        return description;
+    }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
 
     public Status getStatus() {
         return status;

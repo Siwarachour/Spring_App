@@ -19,7 +19,7 @@ public class Projet {
     private String description;
     private int nbreGestions; // max taches
     private int nbreMembreDisponible = 0;
-
+private String image;
     private LocalDate dateDebut;
     private LocalDate dateFin;
 
@@ -40,7 +40,17 @@ public class Projet {
     private Status status = Status.NOT_BEGIN;
 
 
+    public String getImage() {
+        return image;
+    }
 
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public User getCreateur() {
+        return createur;
+    }
 
     public Status getStatus() {
         return status;
