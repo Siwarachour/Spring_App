@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import tn.esprit.back.Entities.User.User;
 
@@ -27,45 +28,83 @@ public class Cv {
 
     private String skills;
 
-    private String experience;
+    @ElementCollection
+    @CollectionTable(name = "cv_experience", joinColumns = @JoinColumn(name = "cv_id"))
+    @Column(name = "experience_entry")
+    private List<String> experiences;  // List of experiences
 
+    @ElementCollection
+    @CollectionTable(name = "cv_education", joinColumns = @JoinColumn(name = "cv_id"))
+    @Column(name = "education_entry")
+    private List<String> educations;  // List of educations
+
+    @ElementCollection
+    @CollectionTable(name = "cv_projects", joinColumns = @JoinColumn(name = "cv_id"))
+    @Column(name = "project_entry")
+    private List<String> projects;  // List of projects
+
+    @ElementCollection
+    private List<String> languages; // List of strings // or List<Language> if it's a custom class
+
+
+    @ElementCollection
+    @CollectionTable(name = "cv_hobbies", joinColumns = @JoinColumn(name = "cv_id"))
+    @Column(name = "hobby_entry")
+    private List<String> hobbies;  // List of hobbies
+
+    @Column(nullable = true)
     private String contactinfo;
 
-    private String education;
-
+    @Column(nullable = true)
     private String pdfDownloadLink;
-    @Column(nullable = true)  // Allows the attribute to be nullable
-    private String extractedWords;  // Will store the extracted words as a comma-separated string
 
-    // Methods to set and get the extracted words...
-    public void setExtractedWords(List<String> words) {
-        if (words != null) {
-            this.extractedWords = String.join(",", words);  // Join list elements into a comma-separated string
-        } else {
-            this.extractedWords = null;  // Set null if the list is null
-        }
-    }
+    @Column(nullable = true)
+    private String photoUrl;
 
-    public List<String> getExtractedWordsAsList() {
-        if (this.extractedWords != null) {
-            return List.of(this.extractedWords.split(","));
-        }
-        return null;
-    }
-    public String getPdfDownloadLink() {
-        return pdfDownloadLink;
-    }
+    @Column(nullable = true)
+    private String email;
 
-    @JsonGetter("username")
-    public String getStudentname() {
-        return student != null ? student.getUsername() : "Unknown"; // Or null, depending on your requirements
-    }
+    @Column(nullable = true)
+    private String phoneNumber;
+
+    @Column(nullable = true)
+    private String address;
+
+    @Column(nullable = true)
+    private String linkedinProfile;
+
+    @Column(nullable = true)
+    private String certificate;
 
     @OneToOne
     @JsonIgnore
-    User student;
+    private User student;
 
     @CreatedBy
-    @Column(insertable = false, updatable = false)  // Ensure this is only set on creation
+    @Column(insertable = false, updatable = false)
     private String createdBy;
+
+    @Override
+    public String toString() {
+        return "Cv{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", skills='" + skills + '\'' +
+                ", experiences=" + experiences +
+                ", educations=" + educations +
+                ", projects=" + projects +
+                ", languages=" + languages +
+                ", hobbies=" + hobbies +
+                ", contactinfo='" + contactinfo + '\'' +
+                ", pdfDownloadLink='" + pdfDownloadLink + '\'' +
+                ", photoUrl='" + photoUrl + '\'' +
+                ", email='" + email + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", address='" + address + '\'' +
+                ", linkedinProfile='" + linkedinProfile + '\'' +
+                ", certificate='" + certificate + '\'' +
+                ", student=" + student +
+                ", createdBy='" + createdBy + '\'' +
+                '}';
+    }
 }

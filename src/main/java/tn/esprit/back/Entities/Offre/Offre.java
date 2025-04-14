@@ -1,24 +1,28 @@
 package tn.esprit.back.Entities.Offre;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import tn.esprit.back.Entities.Application.Application;
 import tn.esprit.back.Entities.User.User;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-@EntityListeners(AuditingEntityListener.class)
-@Builder
 @Entity
-@AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Offre {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -29,27 +33,24 @@ public class Offre {
 
     private String skills;
 
-    private String imageUrl;  // 💡 chemin ou lien vers l'image uploadée
+    private String imageUrl;  // Path or URL to the uploaded image
 
     @CreatedBy
-    @Column(insertable = false)
+    @Column(insertable = false, updatable = false)
     private Integer createdBy;
 
     @JsonIgnore
     @ManyToOne
     private User rh;
 
-    public void setRh(User rh) {
-        this.rh = rh;
-    }
-
     @JsonIgnore
-    @OneToMany(mappedBy = "offre", cascade = CascadeType.ALL)
-    private Set<Application> applications;
+    @OneToMany(mappedBy = "offre", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Application> applications = new HashSet<>();
 
-    // 🧠 Initialisation pour éviter les NullPointer
-    public Offre() {
-        this.applications = new HashSet<>();
-    }
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime createdAt;
+
 
 }

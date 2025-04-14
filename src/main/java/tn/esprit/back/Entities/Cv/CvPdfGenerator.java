@@ -1,121 +1,150 @@
 package tn.esprit.back.Entities.Cv;
 
-import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.colors.DeviceRgb;
+import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.io.image.ImageDataFactory;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 public class CvPdfGenerator {
 
     public static String generateAndSavePdf(Cv cv) throws IOException {
-        // Define the file name and upload directory
         String fileName = "cv_" + cv.getId() + ".pdf";
         String uploadDir = "C:/Users/21650/Desktop/Spring_App/src/main/java/tn/esprit/back/Entities/Cv/uploads/";
-
-        // Create the directory if it doesn't exist
         Path path = Paths.get(uploadDir);
-        if (!Files.exists(path)) {
-            Files.createDirectories(path);
-        }
+        if (!Files.exists(path)) Files.createDirectories(path);
 
         String filePath = uploadDir + fileName;
         PdfWriter writer = new PdfWriter(filePath);
         PdfDocument pdfDoc = new PdfDocument(writer);
-        Document document = new Document(pdfDoc);
+        Document document = new Document(pdfDoc, PageSize.A4);
+        document.setMargins(0, 0, 0, 0);
 
-        // Add title section with simulated centering using spaces
-        String titleText = "Curriculum Vitae";
-        int padding = 20; // Adjust padding to "center" the text
-        String centeredTitle = String.format("%" + padding + "s", titleText);
-        Paragraph title = new Paragraph(centeredTitle)
-                .setBold()
-                .setFontSize(22)
-                .setMarginTop(50)  // Adjust top margin for spacing
-                .setMarginBottom(20);  // Adjust bottom margin for spacing
-        document.add(title);
+        DeviceRgb primaryColor = new DeviceRgb(45, 55, 72);
+        DeviceRgb lightBackground = new DeviceRgb(245, 245, 245);
+        DeviceRgb highlight = new DeviceRgb(63, 81, 181);
 
-        // Add Name
-        Paragraph nameSection = new Paragraph("Name: " + cv.getName())
-                .setBold()
-                .setFontSize(16);
-        document.add(nameSection);
+        Table mainTable = new Table(UnitValue.createPercentArray(new float[]{30, 70}))
+                .useAllAvailableWidth()
+                .setHeight(PageSize.A4.getHeight());
 
-        // Add Skills Section
-        Paragraph skillsTitle = new Paragraph("Skills:")
-                .setBold()
-                .setFontSize(16);
-        document.add(skillsTitle);
-        String[] skills = cv.getSkills().split(",");
-        for (String skill : skills) {
-            document.add(new Paragraph("- " + skill.trim()));
+        // LEFT COLUMN — Personal Info
+        Cell leftCell = new Cell().setBackgroundColor(lightBackground).setPadding(20).setBorder(null);
+
+        if (cv.getPhotoUrl() != null && !cv.getPhotoUrl().isEmpty()) {
+            try {
+                Image img = new Image(ImageDataFactory.create(cv.getPhotoUrl()));
+                img.setWidth(100).setHeight(100).setMarginBottom(15);
+                leftCell.add(img);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
-        // Add Experience Section
-        Paragraph experienceTitle = new Paragraph("Experience:")
-                .setBold()
-                .setFontSize(16);
-        document.add(experienceTitle);
-        document.add(new Paragraph(cv.getExperience()));
+        leftCell.add(new Paragraph(cv.getName())
+                .setBold().setFontSize(20)
+                .setFontColor(primaryColor)
+                .setTextAlignment(TextAlignment.LEFT)
+                .setMarginBottom(10));
 
-        // Add Education Section
-        Paragraph educationTitle = new Paragraph("Education:")
-                .setBold()
-                .setFontSize(16);
-        document.add(educationTitle);
-        document.add(new Paragraph(cv.getEducation()));
+        if (cv.getEmail() != null) leftCell.add(infoParagraph("Email: " + cv.getEmail()));
+        if (cv.getPhoneNumber() != null) leftCell.add(infoParagraph("Phone: " + cv.getPhoneNumber()));
+        if (cv.getAddress() != null) leftCell.add(infoParagraph("Address: " + cv.getAddress()));
+        if (cv.getLinkedinProfile() != null) leftCell.add(infoParagraph("LinkedIn: " + cv.getLinkedinProfile()));
 
-        // Add Contact Information Section
-        Paragraph contactTitle = new Paragraph("Contact Information:")
-                .setBold()
-                .setFontSize(16);
-        document.add(contactTitle);
-        document.add(new Paragraph(cv.getContactinfo()));
+        // RIGHT COLUMN — Professional Info
+        Cell rightCell = new Cell().setBorder(null).setPadding(30);
 
-        // Extract all words from the CV content
-        List<String> words = extractWords(cv);
-        System.out.println("All words in the CV: " + words);
+        // Skills
+        if (cv.getSkills() != null && !cv.getSkills().isEmpty()) {
+            rightCell.add(sectionTitle("Skills", highlight));
+            for (String skill : cv.getSkills().split(",")) {
+                rightCell.add(new Paragraph("• " + skill.trim()).setFontSize(12).setMarginLeft(10).setMarginBottom(5));
+            }
+        }
 
-        // Store the extracted words in the Cv entity
-        cv.setExtractedWords(words);  // Set the extracted words in the Cv entity
+        // Experiences
+        if (cv.getExperiences() != null && !cv.getExperiences().isEmpty()) {
+            rightCell.add(sectionTitle("Experience", highlight));
+            for (String exp : cv.getExperiences()) {
+                rightCell.add(new Paragraph("• " + exp).setFontSize(12).setMarginLeft(10).setMarginBottom(5));
+            }
+        }
 
-        // Save the CV entity to the database (assuming you have a repository or service to do this)
-        // cvRepository.save(cv);  // Uncomment and use your repository to save the Cv
+        // Education
+        if (cv.getEducations() != null && !cv.getEducations().isEmpty()) {
+            rightCell.add(sectionTitle("Education", highlight));
+            for (String edu : cv.getEducations()) {
+                rightCell.add(new Paragraph("• " + edu).setFontSize(12).setMarginLeft(10).setMarginBottom(5));
+            }
+        }
 
-        // Close the document
+        // Projects
+        if (cv.getProjects() != null && !cv.getProjects().isEmpty()) {
+            rightCell.add(sectionTitle("Projects", highlight));
+            for (String project : cv.getProjects()) {
+                rightCell.add(new Paragraph("• " + project).setFontSize(12).setMarginLeft(10).setMarginBottom(5));
+            }
+        }
+
+        // Languages
+        if (cv.getLanguages() != null && !cv.getLanguages().isEmpty()) {
+            rightCell.add(sectionTitle("Languages", highlight));
+            for (String lang : cv.getLanguages()) {
+                rightCell.add(new Paragraph("• " + lang).setFontSize(12).setMarginLeft(10).setMarginBottom(5));
+            }
+        }
+
+        // Hobbies
+        if (cv.getHobbies() != null && !cv.getHobbies().isEmpty()) {
+            rightCell.add(sectionTitle("Hobbies", highlight));
+            for (String hobby : cv.getHobbies()) {
+                rightCell.add(new Paragraph("• " + hobby).setFontSize(12).setMarginLeft(10).setMarginBottom(5));
+            }
+        }
+
+        // Certificates
+        if (cv.getCertificate() != null && !cv.getCertificate().isEmpty()) {
+            rightCell.add(sectionTitle("Certificates", highlight));
+            for (String cert : cv.getCertificate().split(",")) {
+                rightCell.add(new Paragraph("• " + cert.trim()).setFontSize(12).setMarginLeft(10).setMarginBottom(5));
+            }
+        }
+
+        mainTable.addCell(leftCell);
+        mainTable.addCell(rightCell);
+
+        document.add(mainTable);
         document.close();
 
         return fileName;
     }
 
-    private static List<String> extractWords(Cv cv) {
-        List<String> words = new ArrayList<>();
-        // Extract words from all sections of the CV
-        extractWordsFromText(cv.getName(), words);
-        extractWordsFromText(cv.getSkills(), words);
-        extractWordsFromText(cv.getExperience(), words);
-        extractWordsFromText(cv.getEducation(), words);
-        extractWordsFromText(cv.getContactinfo(), words);
-
-        return words;
+    private static Paragraph infoParagraph(String text) {
+        return new Paragraph(text)
+                .setFontSize(10)
+                .setMarginBottom(8)
+                .setFontColor(new DeviceRgb(70, 70, 70));
     }
 
-    private static void extractWordsFromText(String text, List<String> words) {
-        if (text != null && !text.trim().isEmpty()) {
-            // Split the text into words and add them to the list
-            String[] wordArray = text.toLowerCase().split("\\W+");
-            for (String word : wordArray) {
-                if (!word.isEmpty()) {
-                    words.add(word);  // Add non-empty words to the list
-                }
-            }
-        }
+    private static Paragraph sectionTitle(String title, DeviceRgb color) {
+        return new Paragraph(title)
+                .setFontSize(16)
+                .setBold()
+                .setFontColor(color)
+                .setMarginTop(20)
+                .setMarginBottom(10);
     }
-
 }
