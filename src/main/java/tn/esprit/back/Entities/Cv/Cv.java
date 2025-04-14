@@ -11,7 +11,6 @@ import tn.esprit.back.Entities.User.User;
 
 import java.util.List;
 
-@EntityListeners(AuditingEntityListener.class)
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,26 +30,27 @@ public class Cv {
     @ElementCollection
     @CollectionTable(name = "cv_experience", joinColumns = @JoinColumn(name = "cv_id"))
     @Column(name = "experience_entry")
-    private List<String> experiences;  // List of experiences
+    private List<String> experiences;
 
     @ElementCollection
     @CollectionTable(name = "cv_education", joinColumns = @JoinColumn(name = "cv_id"))
     @Column(name = "education_entry")
-    private List<String> educations;  // List of educations
+    private List<String> educations;
 
     @ElementCollection
     @CollectionTable(name = "cv_projects", joinColumns = @JoinColumn(name = "cv_id"))
     @Column(name = "project_entry")
-    private List<String> projects;  // List of projects
+    private List<String> projects;
 
     @ElementCollection
-    private List<String> languages; // List of strings // or List<Language> if it's a custom class
-
+    @CollectionTable(name = "cv_languages", joinColumns = @JoinColumn(name = "cv_id"))
+    @Column(name = "language_entry")
+    private List<String> languages; // Store languages as a list of strings
 
     @ElementCollection
     @CollectionTable(name = "cv_hobbies", joinColumns = @JoinColumn(name = "cv_id"))
     @Column(name = "hobby_entry")
-    private List<String> hobbies;  // List of hobbies
+    private List<String> hobbies;
 
     @Column(nullable = true)
     private String contactinfo;
@@ -59,7 +59,7 @@ public class Cv {
     private String pdfDownloadLink;
 
     @Column(nullable = true)
-    private String photoUrl;
+    private String photoUrl = "C:/Users/21650/Desktop/Spring_App/src/main/java/tn/esprit/back/Entities/Cv/uploads/photo.jpg"; // Default value for photoUrl
 
     @Column(nullable = true)
     private String email;
@@ -83,6 +83,11 @@ public class Cv {
     @CreatedBy
     @Column(insertable = false, updatable = false)
     private String createdBy;
+
+    @JsonGetter("languages")
+    public List<String> getLanguages() {
+        return languages;
+    }
 
     @Override
     public String toString() {

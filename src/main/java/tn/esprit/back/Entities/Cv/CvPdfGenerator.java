@@ -67,12 +67,10 @@ public class CvPdfGenerator {
         // RIGHT COLUMN — Professional Info
         Cell rightCell = new Cell().setBorder(null).setPadding(30);
 
-        // Skills
+        // Skills (Updated: Skills are displayed in a single line now)
         if (cv.getSkills() != null && !cv.getSkills().isEmpty()) {
             rightCell.add(sectionTitle("Skills", highlight));
-            for (String skill : cv.getSkills().split(",")) {
-                rightCell.add(new Paragraph("• " + skill.trim()).setFontSize(12).setMarginLeft(10).setMarginBottom(5));
-            }
+            rightCell.add(new Paragraph(cv.getSkills()).setFontSize(12).setTextAlignment(TextAlignment.LEFT).setMarginBottom(5));
         }
 
         // Experiences
@@ -102,17 +100,13 @@ public class CvPdfGenerator {
         // Languages
         if (cv.getLanguages() != null && !cv.getLanguages().isEmpty()) {
             rightCell.add(sectionTitle("Languages", highlight));
-            for (String lang : cv.getLanguages()) {
-                rightCell.add(new Paragraph("• " + lang).setFontSize(12).setMarginLeft(10).setMarginBottom(5));
-            }
+            rightCell.add(new Paragraph(String.join(", ", cv.getLanguages())).setFontSize(12).setMarginLeft(10).setMarginBottom(5));
         }
 
         // Hobbies
         if (cv.getHobbies() != null && !cv.getHobbies().isEmpty()) {
             rightCell.add(sectionTitle("Hobbies", highlight));
-            for (String hobby : cv.getHobbies()) {
-                rightCell.add(new Paragraph("• " + hobby).setFontSize(12).setMarginLeft(10).setMarginBottom(5));
-            }
+            rightCell.add(new Paragraph(String.join(", ", cv.getHobbies())).setFontSize(12).setMarginLeft(10).setMarginBottom(5));
         }
 
         // Certificates
