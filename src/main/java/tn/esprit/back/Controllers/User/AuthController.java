@@ -3,6 +3,7 @@ package tn.esprit.back.Controllers.User;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,39 +108,40 @@ public class AuthController {
  }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequests loginRequest) {
-
-        User user = userRepository.findByusername(loginRequest.getUsername());
-        System.out.println("uuser"+user);
+    public ResponseEntity<?> login(@RequestBody LoginRequests loginRequest, HttpServletResponse response) {
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
-
-            if (authentication.isAuthenticated()) {
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                String role = user.getRole().getName().toString();
-
-
-                String username = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
-                System.out.println("Authenticated User: " + username);
-
-                Map<String, Object> authData = new HashMap<>();
-                authData.put("token", jwtUtils.generateToken(user.getId(), user.getUsername(), role,user.getImageUrl()));
-                Authentication authenticationy = SecurityContextHolder.getContext().getAuthentication();
-
-
-                System.out.println(authenticationy + " haaaaaa");
-                return ResponseEntity.ok(authData);
+            User user = userRepository.findByusername(loginRequest.getUsername());
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Collections.singletonMap("error", "Invalid credentials"));
             }
-            return ResponseEntity.badRequest().body("Invalid username or password");
+
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getUsername(),
+                            loginRequest.getPassword()
+                    )
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String role = String.valueOf(user.getRole().getName()); // Assurez-vous que le nom du rôle est correct (ex: "ROLE_CLIENT")
+
+            Map<String, Object> authData = new HashMap<>();
+            String token = jwtUtils.generateToken(user.getId(), user.getUsername(), role, user.getImageUrl());
+            authData.put("token", token);
+            authData.put("role", role);
+            authData.put("userId", user.getId());
+            authData.put("username", user.getUsername());
+
+            // Ajout du token dans le header pour Angular
+            response.setHeader("Authorization", "Bearer " + token);
+
+            return ResponseEntity.ok(authData);
         } catch (AuthenticationException e) {
-            log.error(e.getMessage());
-            return ResponseEntity.badRequest().body("Invalid username or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("error", "Invalid credentials"));
         }
     }
-
-
 
 
 

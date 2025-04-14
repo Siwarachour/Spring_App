@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface ItemRepository extends JpaRepository<Item, Long> {
 
-    List<Item> findBySellerId(int sellerId);
+    List<Item> findBySellerId(Long sellerId);
     List<Item> findByStatus(ItemStatus status); // Nouvelle méthode pour récupérer les items par statut
 }

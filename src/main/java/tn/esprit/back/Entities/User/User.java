@@ -251,13 +251,7 @@ private String description;
         this.projetsParticipes = projetsParticipes;
     }
 
-    public byte[] getImage() {
-        return image;
-    }
 
-    public void setImage(byte[] image) {
-        this.image = image;
-    }
 
     public List<Item> getItemsForSale() {
         return itemsForSale;

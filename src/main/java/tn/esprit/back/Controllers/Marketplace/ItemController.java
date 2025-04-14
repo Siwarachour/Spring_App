@@ -2,13 +2,16 @@ package tn.esprit.back.Controllers.Marketplace;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.back.Entities.Marketplace.Item;
+import tn.esprit.back.Entities.Marketplace.Category;
 import tn.esprit.back.Services.Marketplace.IItemService;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -18,29 +21,78 @@ public class ItemController {
     @Autowired
     private IItemService itemService;
 
-    @PostMapping
-    public ResponseEntity<Item> ajouterItem(@RequestBody Item item) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<?> ajouterItem(
+            @RequestParam("title") String title,
+            @RequestParam("description") String description,
+            @RequestParam("price") BigDecimal price,
+            @RequestParam("category") String category,
+            @RequestParam("sellerId") Long sellerId,
+            @RequestParam(value = "files", required = false) MultipartFile[] files) {
 
         try {
-            Item createdItem = itemService.ajouterItem(item, authentication);
+            // Enhanced validation
+            if (title == null || title.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Title is required");
+            }
+            if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+                return ResponseEntity.badRequest().body("Price must be positive");
+            }
+
+            // File validation
+            if (files != null) {
+                for (MultipartFile file : files) {
+                    if (file.isEmpty()) {
+                        return ResponseEntity.badRequest().body("File cannot be empty");
+                    }
+                    if (!file.getContentType().startsWith("image/")) {
+                        return ResponseEntity.badRequest().body("Only image files are allowed");
+                    }
+                    if (file.getSize() > 5 * 1024 * 1024) { // 5MB
+                        return ResponseEntity.badRequest().body("File size exceeds 5MB limit");
+                    }
+                }
+            }
+
+            Item item = new Item();
+            item.setTitle(title);
+            item.setDescription(description);
+            item.setPrice(price);
+            item.setCategory(Category.valueOf(category.toUpperCase()));
+
+            Item createdItem = itemService.ajouterItem(item, files, sellerId);
             return new ResponseEntity<>(createdItem, HttpStatus.CREATED);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error creating item");
         }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Item> updateItem(@PathVariable Long id, @RequestBody Item item) {
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<Item> updateItem(
+            @PathVariable Long id,
+            @RequestParam("title") String title,
+            @RequestParam("description") String description,
+            @RequestParam("price") BigDecimal price,
+            @RequestParam("category") String category,
+            @RequestParam("sellerId") Long sellerId,
+            @RequestParam(value = "files", required = false) MultipartFile[] files) {
+
         try {
+            Item item = new Item();
             item.setId(id);
-            Item updatedItem = itemService.updateItem(item);
+            item.setTitle(title);
+            item.setDescription(description);
+            item.setPrice(price);
+            item.setCategory(Category.valueOf(category.toUpperCase()));
+
+            Item updatedItem = itemService.updateItem(item, files, sellerId);
             return ResponseEntity.ok(updatedItem);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
 
@@ -52,62 +104,43 @@ public class ItemController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Item> getItemById(@PathVariable Long id) {
-        try {
-            return itemService.getItemById(id)
-                    .map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-        }
+        return itemService.getItemById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteItem(@PathVariable Long id) {
-        try {
-            itemService.supprimerItem(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<Void> deleteItem(@PathVariable Long id, @RequestParam("sellerId") Long sellerId) {
+        itemService.supprimerItem(id, sellerId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/seller/{sellerId}")
-    public ResponseEntity<List<Item>> getItemsBySeller(@PathVariable int sellerId) {
-        try {
-            List<Item> items = itemService.getItemsBySeller(sellerId);
-            return ResponseEntity.ok(items);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-        }
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<List<Item>> getItemsBySeller(@PathVariable Long sellerId) {
+        List<Item> items = itemService.getItemsBySeller(sellerId);
+        return ResponseEntity.ok(items);
     }
 
     @GetMapping("/pending")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Item>> getItemsPendingApproval() {
-        try {
-            List<Item> items = itemService.getItemsPendingApproval();
-            return ResponseEntity.ok(items);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-        }
+        List<Item> items = itemService.getItemsPendingApproval();
+        return ResponseEntity.ok(items);
     }
 
     @PostMapping("/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> approveItem(@PathVariable Long id) {
-        try {
-            itemService.approveItem(id);
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        itemService.approveItem(id);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> rejectItem(@PathVariable Long id) {
-        try {
-            itemService.rejectItem(id);
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        itemService.rejectItem(id);
+        return ResponseEntity.ok().build();
     }
 }

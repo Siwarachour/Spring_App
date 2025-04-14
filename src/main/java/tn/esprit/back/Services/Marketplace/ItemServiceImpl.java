@@ -2,19 +2,19 @@ package tn.esprit.back.Services.Marketplace;
 
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import tn.esprit.back.Entities.Marketplace.Item;
-import tn.esprit.back.Entities.Marketplace.ItemStatus;
+import org.springframework.web.multipart.MultipartFile;
+import tn.esprit.back.Entities.Marketplace.*;
 import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Entities.Role.RoleName;
 import tn.esprit.back.Repository.Marketplace.ItemRepository;
 import tn.esprit.back.Repository.Marketplace.TransactionRepository;
 import tn.esprit.back.Repository.User.UserRepository;
 
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,49 +26,57 @@ public class ItemServiceImpl implements IItemService {
 
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
     private TransactionRepository transactionRepository;
+
     private User getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByEmail(username);
-        if (user == null) {
-            user = userRepository.findByusername(username);
+        Optional<User> userByEmail = Optional.ofNullable(userRepository.findByEmail(username));
+        if (userByEmail.isPresent()) {
+            return userByEmail.get();
         }
-
-        if (user == null) {
-            throw new RuntimeException("User not found with identifier: " + username);
-        }
-        return user;
+        Optional<User> userByUsername = Optional.ofNullable(userRepository.findByusername(username));
+        return userByUsername.orElseThrow(() -> new RuntimeException("User not found: " + username));
     }
 
-    private boolean isAdmin(User user) {
-        return user.getRole() != null && user.getRole().getName().equals(RoleName.ROLE_ADMIN);
+    private boolean hasAdminRole(User user) {
+        return user.getRole() != null && user.getRole().getName() == RoleName.ROLE_ADMIN;
     }
 
-    private boolean isClient(User user) {
-        return user.getRole() != null && user.getRole().getName().equals(RoleName.ROLE_CLIENT);
+    private boolean hasClientRole(User user) {
+        return user.getRole() != null && user.getRole().getName() == RoleName.ROLE_CLIENT;
     }
 
     @Override
-    public Item ajouterItem(Item item, Authentication authentication) {
-        User user = getCurrentUser();
+    public Item ajouterItem(Item item, MultipartFile[] files, Long sellerId) {
+        User currentUser = getCurrentUser();
 
-        // Allow both admins and clients to add items
-        if (!isAdmin(user) && !isClient(user)) {
-            throw new RuntimeException("Only admins or clients can add items");
+        // Vérification des permissions
+        if (!hasClientRole(currentUser)) {
+            throw new SecurityException("Seuls les clients peuvent ajouter des items");
         }
 
-        item.setSeller(user);
-
-        // Set different status based on user role
-        if (isAdmin(user)) {
-            // Admin-added items are automatically approved
-            item.setStatus(ItemStatus.APPROVED);
-        } else {
-            // Client-added items need approval
-            item.setStatus(ItemStatus.PENDING);
+        if (currentUser.getId() != sellerId) {
+            throw new SecurityException("Vous ne pouvez créer que vos propres items");
         }
 
+        // Traitement des fichiers
+        if (files != null && files.length > 0) {
+            try {
+                for (MultipartFile file : files) {
+                    // Stocker les fichiers et ajouter les URLs à l'item
+                    String fileUrl = storeFile(file); // Implémentez cette méthode
+                    item.getImages().add(fileUrl);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Erreur lors du traitement des fichiers", e);
+            }
+        }
+
+        // Configuration de l'item
+        item.setSeller(currentUser);
+        item.setStatus(ItemStatus.PENDING);
         item.setCreatedAt(LocalDateTime.now());
         item.setUpdatedAt(LocalDateTime.now());
 
@@ -76,89 +84,69 @@ public class ItemServiceImpl implements IItemService {
     }
 
     @Override
-    public void approveItem(Long itemId) {
-        User currentUser = getCurrentUser();
-        if (!isAdmin(currentUser)) {
-            throw new RuntimeException("Only admin can approve items");
-        }
-
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
-
-        item.setStatus(ItemStatus.APPROVED);
-        itemRepository.save(item);
-
-        // The client becomes seller for this item
-        User seller = item.getSeller();
-        if (seller != null) {
-            if (seller.getItemsForSale() == null) {
-                seller.setItemsForSale(new ArrayList<>());
-            }
-            seller.getItemsForSale().add(item);
-            userRepository.save(seller);
-        }
-    }
-
-    @Override
-    public Item updateItem(Item item) {
+    public Item updateItem(Item item, MultipartFile[] files, Long sellerId) {
         User currentUser = getCurrentUser();
         Item existingItem = itemRepository.findById(item.getId())
-                .orElseThrow(() -> new RuntimeException("Item not found with ID: " + item.getId()));
+                .orElseThrow(() -> new RuntimeException("Item non trouvé"));
 
-        // Admin can update any item, clients can only update their own items
-        if (!isAdmin(currentUser) &&
-                (existingItem.getSeller() == null || existingItem.getSeller().getId() != currentUser.getId())) {
-            throw new RuntimeException("You can only update your own items");
+        // Vérification des permissions
+        if (!hasClientRole(currentUser) ||
+                existingItem.getSeller().getId() != currentUser.getId() ||
+                currentUser.getId() != sellerId) {
+            throw new SecurityException("Action non autorisée");
         }
 
+        // Traitement des fichiers
+        if (files != null && files.length > 0) {
+            existingItem.getImages().clear();
+            try {
+                for (MultipartFile file : files) {
+                    String fileUrl = storeFile(file);
+                    existingItem.getImages().add(fileUrl);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Erreur lors de la mise à jour des fichiers", e);
+            }
+        }
+
+        // Mise à jour des champs
         existingItem.setTitle(item.getTitle());
         existingItem.setDescription(item.getDescription());
         existingItem.setPrice(item.getPrice());
         existingItem.setCategory(item.getCategory());
-        existingItem.setImages(item.getImages());
         existingItem.setUpdatedAt(LocalDateTime.now());
 
         return itemRepository.save(existingItem);
     }
 
     @Override
-    public List<Item> getAllItems() {
-        return itemRepository.findAll();
-    }
-
-    @Override
-    public Optional<Item> getItemById(Long id) {
-        return itemRepository.findById(id);
-    }
-
-
-    @Override
     @Transactional
-    public void supprimerItem(Long id) {
+    public void supprimerItem(Long itemId, Long sellerId) {
         User currentUser = getCurrentUser();
-        Item item = itemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Item not found with ID: " + id));
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("Item non trouvé"));
 
-        // Admin can delete any item, clients can only delete their own items
-        if (!isAdmin(currentUser)) {
-            if (item.getSeller() == null || item.getSeller().getId() != currentUser.getId()) {
-                throw new RuntimeException("You can only delete your own items");
-            }
+        // Vérification des permissions
+        if (!hasClientRole(currentUser) ||
+                item.getSeller().getId() != currentUser.getId() ||
+                currentUser.getId() != sellerId) {
+            throw new SecurityException("Action non autorisée");
         }
 
-        // First delete all transactions associated with this item
-        transactionRepository.deleteByItemId(id);
+        // Suppression des transactions associées
+        transactionRepository.deleteByItemId(itemId);
 
-        // Then delete the item
+        // Suppression de l'item
         itemRepository.delete(item);
     }
+
     @Override
-    public List<Item> getItemsBySeller(int sellerId) {
+    public List<Item> getItemsBySeller(Long sellerId) {
         User currentUser = getCurrentUser();
 
-        // Admin can view any seller's items, clients can only view their own
-        if (!isAdmin(currentUser) && currentUser.getId() != sellerId) {
-            throw new RuntimeException("You can only view your own items");
+        // Un client ne peut voir que ses propres items
+        if (hasClientRole(currentUser) && currentUser.getId() != sellerId) {
+            throw new SecurityException("Action non autorisée");
         }
 
         return itemRepository.findBySellerId(sellerId);
@@ -167,23 +155,82 @@ public class ItemServiceImpl implements IItemService {
     @Override
     public List<Item> getItemsPendingApproval() {
         User currentUser = getCurrentUser();
-        if (!isAdmin(currentUser)) {
-            throw new RuntimeException("Only admin can view pending items");
+        if (!hasAdminRole(currentUser)) {
+            throw new SecurityException("Seuls les admins peuvent voir les items en attente");
         }
         return itemRepository.findByStatus(ItemStatus.PENDING);
     }
 
     @Override
-    public void rejectItem(Long itemId) {
+    public void approveItem(Long itemId) {
         User currentUser = getCurrentUser();
-        if (!isAdmin(currentUser)) {
-            throw new RuntimeException("Only admin can reject items");
+        if (!hasAdminRole(currentUser)) {
+            throw new SecurityException("Seuls les admins peuvent approuver des items");
         }
 
         Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found with ID: " + itemId));
+                .orElseThrow(() -> new RuntimeException("Item non trouvé"));
+
+        item.setStatus(ItemStatus.APPROVED);
+        item.setUpdatedAt(LocalDateTime.now());
+        itemRepository.save(item);
+    }
+
+    @Override
+    public void rejectItem(Long itemId) {
+        User currentUser = getCurrentUser();
+        if (!hasAdminRole(currentUser)) {
+            throw new SecurityException("Seuls les admins peuvent rejeter des items");
+        }
+
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("Item non trouvé"));
 
         item.setStatus(ItemStatus.REJECTED);
+        item.setUpdatedAt(LocalDateTime.now());
         itemRepository.save(item);
+    }
+
+    @Override
+    public List<Item> getAllItems() {
+        User currentUser = getCurrentUser();
+
+        // Les admins voient tous les items
+        if (hasAdminRole(currentUser)) {
+            return itemRepository.findAll();
+        }
+
+        // Les clients ne voient que les items approuvés
+        return itemRepository.findByStatus(ItemStatus.APPROVED);
+    }
+
+    @Override
+    public Optional<Item> getItemById(Long id) {
+        User currentUser = getCurrentUser();
+        Optional<Item> item = itemRepository.findById(id);
+
+        if (item.isPresent()) {
+            // Les admins peuvent tout voir
+            if (hasAdminRole(currentUser)) {
+                return item;
+            }
+
+            // Les clients ne peuvent voir que leurs items ou les items approuvés
+            boolean isOwner = item.get().getSeller() != null &&
+                    item.get().getSeller().getId() == currentUser.getId();
+            boolean isApproved = item.get().getStatus() == ItemStatus.APPROVED;
+
+            if (!isOwner && !isApproved) {
+                throw new SecurityException("Action non autorisée");
+            }
+        }
+
+        return item;
+    }
+
+    private String storeFile(MultipartFile file) throws IOException {
+        // Implémentez le stockage physique des fichiers
+        // Retournez l'URL du fichier stocké
+        return "url_du_fichier_stocké";
     }
 }
