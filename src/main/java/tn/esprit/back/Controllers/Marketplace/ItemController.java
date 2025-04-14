@@ -1,5 +1,7 @@
 package tn.esprit.back.Controllers.Marketplace;
 
+import com.nimbusds.jose.shaded.gson.JsonObject;
+import com.nimbusds.jose.shaded.gson.JsonParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -12,6 +14,8 @@ import tn.esprit.back.Entities.Marketplace.Category;
 import tn.esprit.back.Services.Marketplace.IItemService;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @RestController
@@ -29,7 +33,7 @@ public class ItemController {
             @RequestParam("price") BigDecimal price,
             @RequestParam("category") String category,
             @RequestParam("sellerId") Long sellerId,
-            @RequestParam(value = "files", required = false) MultipartFile[] files) {
+            @RequestPart(value = "files", required = false) MultipartFile[] files) {  // Changed to @RequestPart
 
         try {
             // Enhanced validation
@@ -60,13 +64,15 @@ public class ItemController {
             item.setDescription(description);
             item.setPrice(price);
             item.setCategory(Category.valueOf(category.toUpperCase()));
+            // Initialize images list if null
+            if (item.getImages() == null) {
+                item.setImages(new ArrayList<>());
+            }
 
             Item createdItem = itemService.ajouterItem(item, files, sellerId);
             return new ResponseEntity<>(createdItem, HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error creating item");
+            return ResponseEntity.internalServerError().body("Error creating item: " + e.getMessage());
         }
     }
 
@@ -108,13 +114,50 @@ public class ItemController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('CLIENT')")
-    public ResponseEntity<Void> deleteItem(@PathVariable Long id, @RequestParam("sellerId") Long sellerId) {
-        itemService.supprimerItem(id, sellerId);
-        return ResponseEntity.noContent().build();
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
+    public ResponseEntity<Void> deleteItem(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader) {
+
+        try {
+            Long currentUserId = getUserIdFromToken(authHeader.replace("Bearer ", ""));
+            itemService.supprimerItem(id, currentUserId);
+            return ResponseEntity.noContent().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
+
+    private Long getUserIdFromToken(String token) {
+        // Implémentation basique - à adapter selon votre système d'authentification
+        // Exemple avec JWT (si vous utilisez jjwt) :
+        /*
+        Claims claims = Jwts.parser()
+                .setSigningKey("votreSecretKey")
+                .parseClaimsJws(token)
+                .getBody();
+        return Long.parseLong(claims.getSubject());
+        */
+
+        // Solution temporaire si vous n'utilisez pas JWT :
+        // Extraire l'ID de manière simplifiée (à adapter)
+        try {
+            // Exemple: suppose que le token contient l'ID après un prefixe
+            String[] parts = token.split("\\.");
+            if (parts.length > 0) {
+                String payload = new String(Base64.getDecoder().decode(parts[1]));
+                JsonObject jsonObject = JsonParser.parseString(payload).getAsJsonObject();
+                return jsonObject.get("id").getAsLong();
+            }
+            throw new RuntimeException("Invalid token format");
+        } catch (Exception e) {
+            throw new SecurityException("Failed to extract user ID from token", e);
+        }
+    }
+    
 
     @GetMapping("/seller/{sellerId}")
     @PreAuthorize("hasRole('CLIENT')")

@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.back.Entities.Marketplace.*;
 import tn.esprit.back.Entities.User.User;
@@ -13,10 +14,17 @@ import tn.esprit.back.Repository.Marketplace.TransactionRepository;
 import tn.esprit.back.Repository.User.UserRepository;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ItemServiceImpl implements IItemService {
@@ -65,8 +73,7 @@ public class ItemServiceImpl implements IItemService {
         if (files != null && files.length > 0) {
             try {
                 for (MultipartFile file : files) {
-                    // Stocker les fichiers et ajouter les URLs à l'item
-                    String fileUrl = storeFile(file); // Implémentez cette méthode
+                    String fileUrl = "/uploads/" + storeFile(file);
                     item.getImages().add(fileUrl);
                 }
             } catch (IOException e) {
@@ -82,7 +89,6 @@ public class ItemServiceImpl implements IItemService {
 
         return itemRepository.save(item);
     }
-
     @Override
     public Item updateItem(Item item, MultipartFile[] files, Long sellerId) {
         User currentUser = getCurrentUser();
@@ -126,10 +132,12 @@ public class ItemServiceImpl implements IItemService {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Item non trouvé"));
 
-        // Vérification des permissions
-        if (!hasClientRole(currentUser) ||
-                item.getSeller().getId() != currentUser.getId() ||
-                currentUser.getId() != sellerId) {
+        // Vérification des permissions plus flexible
+        boolean isAdmin = hasAdminRole(currentUser);
+        boolean isOwner = item.getSeller() != null &&
+                item.getSeller().getId()==(currentUser.getId()); // Utilisation de equals()
+
+        if (!isAdmin && !isOwner) {
             throw new SecurityException("Action non autorisée");
         }
 
@@ -139,7 +147,6 @@ public class ItemServiceImpl implements IItemService {
         // Suppression de l'item
         itemRepository.delete(item);
     }
-
     @Override
     public List<Item> getItemsBySeller(Long sellerId) {
         User currentUser = getCurrentUser();
@@ -217,7 +224,7 @@ public class ItemServiceImpl implements IItemService {
 
             // Les clients ne peuvent voir que leurs items ou les items approuvés
             boolean isOwner = item.get().getSeller() != null &&
-                    item.get().getSeller().getId() == currentUser.getId();
+                    item.get().getSeller().getId()==(currentUser.getId()); // Utilisation de equals()
             boolean isApproved = item.get().getStatus() == ItemStatus.APPROVED;
 
             if (!isOwner && !isApproved) {
@@ -229,8 +236,27 @@ public class ItemServiceImpl implements IItemService {
     }
 
     private String storeFile(MultipartFile file) throws IOException {
-        // Implémentez le stockage physique des fichiers
-        // Retournez l'URL du fichier stocké
-        return "url_du_fichier_stocké";
+        // Chemin absolu du répertoire de stockage
+        String UPLOAD_DIR = "C:/Users/friaa/OneDrive - ESPRIT/Bureau/Spring_App/src/main/resources/uploads";
+        Path uploadPath = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
+
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        // Générer un nom de fichier unique
+        String fileName = UUID.randomUUID().toString() + "-" +
+                StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+
+        // Valider le nom du fichier
+        if (fileName.contains("..")) {
+            throw new IOException("Nom de fichier invalide: " + fileName);
+        }
+
+        // Sauvegarder le fichier
+        Path targetLocation = uploadPath.resolve(fileName);
+        Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+        return fileName;
     }
 }
