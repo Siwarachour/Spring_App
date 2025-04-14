@@ -21,7 +21,7 @@ private  String description;
 private String image;
 private String language;
     @ManyToOne
-    @JsonBackReference
+    @JsonIgnore
     private Projet projet;
 
     @ManyToOne

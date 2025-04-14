@@ -26,7 +26,6 @@ public class UserService {
             user.setAddress(updatedUser.getAddress());
             user.setPhone(updatedUser.getPhone());
             user.setEmail(updatedUser.getEmail());
-            user.setPassword(updatedUser.getPassword());
             user.setDescription(updatedUser.getDescription());
             return userRepository.save(user);
         }).orElseThrow();

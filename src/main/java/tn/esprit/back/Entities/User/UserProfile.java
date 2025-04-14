@@ -6,6 +6,7 @@ import java.util.List;
 
 public class UserProfile {
 
+
     private String email;
     private String FirstName;
     private String LastName;

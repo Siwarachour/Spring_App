@@ -13,16 +13,7 @@ public class TacheController {
     @Autowired
     private ProjetService projetService;
 
-    // UPDATE TÂCHE
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateTache(@PathVariable int id, @RequestBody Tache tache) {
-        return ResponseEntity.ok(projetService.updateTache(id, tache));
-    }
 
-    // DELETE TÂCHE
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteTache(@PathVariable int id) {
-        projetService.deleteTache(id);
-        return ResponseEntity.ok("Tâche supprimée");
-    }
+
+
 }

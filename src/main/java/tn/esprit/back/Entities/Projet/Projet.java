@@ -1,7 +1,6 @@
 package tn.esprit.back.Entities.Projet;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import tn.esprit.back.Entities.User.User;
@@ -19,7 +18,8 @@ public class Projet {
     private String description;
     private int nbreGestions; // max taches
     private int nbreMembreDisponible = 0;
-private String image;
+
+    private String image;
     private LocalDate dateDebut;
     private LocalDate dateFin;
 
@@ -32,7 +32,7 @@ private String image;
     private List<User> membres = new ArrayList<>();
 
     @OneToMany(mappedBy = "projet", cascade = CascadeType.ALL)
-    @JsonManagedReference
+    @JsonIgnore
     private List<Tache> taches = new ArrayList<>();
 
 
@@ -48,7 +48,7 @@ private String image;
         this.image = image;
     }
 
-    public User getCreateur() {
+    public User getCreateur(int createur_id) {
         return createur;
     }
 
