@@ -7,15 +7,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import tn.esprit.back.Services.User.CustomUserDetailsService;
-import tn.esprit.back.configurations.JwtFilter;
 
 import java.util.Arrays;
 
@@ -25,18 +22,12 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
-    private final JwtUtils jwtUtils;
 
-
-
-
-    // Bean pour l'encodeur de mot de passe
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Bean pour l'AuthenticationManager
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity httpSecurity) throws Exception {
         AuthenticationManagerBuilder authenticationManagerBuilder = httpSecurity.getSharedObject(AuthenticationManagerBuilder.class);
@@ -44,44 +35,17 @@ public class SecurityConfig {
         return authenticationManagerBuilder.build();
     }
 
-    // Bean pour configurer la sécurité des requêtes HTTP
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))  // Remplace "cors()" avec la nouvelle méthode
-                .csrf(csrf -> csrf.disable())  // Remplace "csrf()" avec la nouvelle méthode
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/api/auth/register").permitAll()
-                        .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
-                        .requestMatchers("/api/auth/reset-password").permitAll()
                         .requestMatchers("/api/auth/profile").authenticated()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/assets/profile/**").permitAll()
                         .requestMatchers("/api/auth/user/upload-image").authenticated()
-                        .requestMatchers("/application/getall").authenticated()
-
-                        .requestMatchers("/api/auth/statistics").permitAll()
-                        .requestMatchers("/api/auth/profile/image").authenticated()
-                       .requestMatchers("/api/auth/users/add").hasRole("ADMIN")
-                        .requestMatchers("/api/auth/users/**").authenticated()
-                        .requestMatchers("/api/auth/users/{username}/upload-image").permitAll()
-                                .requestMatchers("/api/projets").permitAll()
-                        .requestMatchers("/api/projets/**").authenticated()
-
-                        .requestMatchers("/api/taches").authenticated()
-                        .requestMatchers("/api/taches/**").authenticated()
-
-
-
-                        .requestMatchers("/api/auth/users/{id}/roles").hasRole("ADMIN")
-
-
-
-
-
-                        .anyRequest().permitAll()  // Authentifie toutes les autres requêtes
+                        .anyRequest().permitAll() // ✅ autorise toutes les requêtes
 
                 )
                 .formLogin(form -> form
@@ -90,19 +54,17 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
                         .defaultSuccessUrl("http://localhost:4201/", true)
-                )  // Nouvelle approche OAuth2
-                .addFilterBefore(new JwtFilter(customUserDetailsService, jwtUtils), UsernamePasswordAuthenticationFilter.class); // Ajout du filtre JWT
-
+                );
 
 
         return httpSecurity.build();
     }
-    // Bean pour configurer CORS (Cross-Origin Resource Sharing)
+
     @Bean
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:4201"));
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE","OPTIONS"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         config.setAllowCredentials(true);
 
@@ -110,7 +72,4 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
-
-
-
 }

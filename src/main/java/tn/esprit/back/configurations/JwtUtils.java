@@ -118,7 +118,7 @@ public class JwtUtils {
     }
 
     // Extraire tous les claims du token
-   private Claims extractAllClaims(String token) {
+    private Claims extractAllClaims(String token) {
         return Jwts.parser() // Analyser le token
                 .setSigningKey(getSignKey()) // Définir la clé de signature
                 .parseClaimsJws(token) // Analyser les claims du token
