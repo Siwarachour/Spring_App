@@ -7,6 +7,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import tn.esprit.back.Entities.Projet.Projet;
 import tn.esprit.back.Entities.Projet.Tache;
 import tn.esprit.back.Entities.Role.Role;
+import tn.esprit.back.Entities.coursCertificat.Cours;
 import tn.esprit.back.Entities.library.Department;
 import tn.esprit.back.Entities.library.Document;
 import tn.esprit.back.Entities.library.Review;
@@ -31,7 +32,6 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-
     private String username;
     private String password;
     private String firstName;
@@ -148,6 +148,9 @@ private String description;
     public int getId() {
         return id;
     }
+
+    @ManyToMany(cascade = CascadeType.ALL)
+    private Set<Cours> cours;
 
     public String getUsername() {
         return username;

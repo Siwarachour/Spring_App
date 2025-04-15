@@ -38,6 +38,7 @@ public class JwtUtils {
         claims.put("id", id);
         claims.put("username", username);
         claims.put("role", role);
+        claims.put("imageUrl", imageUrl);
 
 
         return createToken(claims);

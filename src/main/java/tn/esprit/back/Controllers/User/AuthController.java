@@ -331,7 +331,7 @@ public class AuthController {
     @GetMapping("/uploads/{imageName}")
     public ResponseEntity<Resource> getImage(@PathVariable String imageName) {
         // Charger l'image depuis le serveur
-        Path imagePath = Paths.get("D:/doc/Bureau/PI/Back/src/main/resources/uploads").resolve(imageName);
+        Path imagePath = Paths.get("C:/Users/ala/Desktop/pi/Spring_App/src/main/resources/uploads").resolve(imageName);
         Resource resource = new FileSystemResource(imagePath);
 
         if (resource.exists() && resource.isReadable()) {
