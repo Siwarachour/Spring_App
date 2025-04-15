@@ -60,6 +60,7 @@ public class SecurityConfig {
                         .requestMatchers("/assets/profile/**").permitAll()
                         .requestMatchers("/api/auth/user/upload-image").authenticated()
                         .requestMatchers("/application/getall").authenticated()
+                        .requestMatchers("/api/security/**").authenticated()
 
                         .requestMatchers("/api/auth/statistics").permitAll()
                         .requestMatchers("/api/auth/profile/image").authenticated()
