@@ -1,6 +1,7 @@
 package tn.esprit.back.Controllers.User;
 
-import jakarta.mail.MessagingException;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -203,10 +204,6 @@ public class AuthController {
             // Log détaillé de l'erreur d'authentification
             e.printStackTrace();
             System.out.println("Erreur d'authentification : " + e.getMessage());
-        } catch (MessagingException e) {
-            // Log spécifique pour les erreurs de messagerie
-            e.printStackTrace();
-            System.out.println("Erreur de messagerie : " + e.getMessage());
         } catch (Exception e) {
             // Log générique pour toute autre erreur
             e.printStackTrace();

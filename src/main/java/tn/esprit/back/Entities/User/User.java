@@ -7,8 +7,12 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import tn.esprit.back.Entities.Projet.Projet;
 import tn.esprit.back.Entities.Projet.Tache;
 import tn.esprit.back.Entities.Role.Role;
+import tn.esprit.back.Entities.library.Department;
+import tn.esprit.back.Entities.library.Document;
+import tn.esprit.back.Entities.library.Review;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -244,5 +248,15 @@ private String description;
     @LastModifiedDate
     @Column(insertable = false)
     private LocalDateTime lastmodifiedDate;*/
+
+
+
+    @ManyToOne
+    private Department department;
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
+    private List<Document> documents = new ArrayList<>();
+    @OneToMany(mappedBy = "reviewer")
+    private List<Review> reviews = new ArrayList<>();
+
 
 }
