@@ -24,7 +24,7 @@ public class CvController {
 
     // Method to add CV (already existing)
     @PostMapping("/add")
-    public Integer addCv(@RequestBody Cv cv) {
+    public Integer addCv(@RequestBody Cv cv ) {
         return (Integer) cvService.addCv(cv);
     }
     @PostMapping("/uploadPhoto/{cvId}")
