@@ -140,9 +140,6 @@ public class AuthController {
     }
 
 
-
-
-
     @GetMapping("/welcome")
         public String welcome(OAuth2AuthenticationToken authentication) {
             return "Bienvenue, " + authentication.getPrincipal().getAttribute("name") + "!";

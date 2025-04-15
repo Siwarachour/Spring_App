@@ -26,6 +26,9 @@ public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtUtils jwtUtils;
 
+
+
+
     // Bean pour l'encodeur de mot de passe
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -80,7 +83,16 @@ public class SecurityConfig {
                         .anyRequest().permitAll()  // Authentifie toutes les autres requêtes
 
                 )
+                .formLogin(form -> form
+                        .loginPage("/login").permitAll()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")
+                        .defaultSuccessUrl("http://localhost:4201/", true)
+                )  // Nouvelle approche OAuth2
                 .addFilterBefore(new JwtFilter(customUserDetailsService, jwtUtils), UsernamePasswordAuthenticationFilter.class); // Ajout du filtre JWT
+
+
 
         return httpSecurity.build();
     }
@@ -89,7 +101,7 @@ public class SecurityConfig {
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:4201"));
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE","OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         config.setAllowCredentials(true);
 

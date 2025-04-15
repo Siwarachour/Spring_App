@@ -1,14 +1,18 @@
 package tn.esprit.back.Controllers.Projet;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.config.Task;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import tn.esprit.back.Entities.Projet.Projet;
 import tn.esprit.back.Entities.Projet.Tache;
+import tn.esprit.back.Repository.Projet.TacheRepository;
 import tn.esprit.back.Services.Projet.ProjetService;
+import tn.esprit.back.Services.Projet.TacheService;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -21,6 +25,7 @@ import java.util.List;
 public class ProjetController {
 
     private final ProjetService projetService;
+    private final TacheRepository tacheRepository;
 
     @GetMapping("/all")
     public ResponseEntity<List<Projet>> getAllProjets() {
@@ -81,28 +86,40 @@ projet.setNbreGestions(nbreGestions);
     public ResponseEntity<Projet> addTacheToProjet(@PathVariable int projetId,
                                                    @PathVariable int userId,
                                                    @RequestBody Tache tache) {
-        projetService.updateProjectStatus(projetId);
+
         return ResponseEntity.ok(projetService.addTacheToProjet(projetId, userId, tache));
     }
 
-    @DeleteMapping("/{projetId}/tache/{tacheId}/delete")
     public ResponseEntity<Projet> deleteTacheFromProjet(@PathVariable int projetId,
                                                         @PathVariable int tacheId) {
-        return ResponseEntity.ok(projetService.deleteTacheFromProjet(projetId, tacheId));
+        try {
+            // Essayer de supprimer la tâche du projet
+            Projet projet = projetService.deleteTacheFromProjet(projetId, tacheId);
+            return ResponseEntity.ok(projet); // Retourne le projet mis à jour
+        } catch (EntityNotFoundException e) {
+            // Si le projet ou la tâche n'a pas été trouvé, retourner 404 Not Found
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            // En cas d'erreur inattendue, retourner 500 Internal Server Error
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
     }
 
     @PutMapping("/{projetId}/tache/{tacheId}/update")
     public ResponseEntity<Projet> updateTacheFromProjet(@PathVariable int projetId,
                                                         @PathVariable int tacheId,
                                                         @RequestBody Tache updatedTache) {
-        projetService.updateProjectStatus(projetId);
+
         return ResponseEntity.ok(projetService.updateTacheFromProjet(projetId, tacheId, updatedTache));
     }
 
-    @PostMapping("/{projetId}/participate/{userId}")
-    public ResponseEntity<Projet> participateToProjet(@PathVariable int projetId, @PathVariable int userId) {
-        return ResponseEntity.ok(projetService.participateToProjet(projetId, userId));
+    @PostMapping("projets/{projetId}/participate/{userId}")
+    public ResponseEntity<String> participerAuProjet(@PathVariable int projetId, @PathVariable int userId) {
+        projetService.ajouterParticipant(projetId, userId);
+        return ResponseEntity.ok("User has joined the project");
     }
+
 
     @PostMapping("/{projetId}/upload-image")
     public ResponseEntity<Projet> uploadImageToProjet(@PathVariable int projetId,
@@ -114,8 +131,37 @@ projet.setNbreGestions(nbreGestions);
 
     @GetMapping("/{id}")
     public ResponseEntity<Projet> getProjetById(@PathVariable int id) {
-        projetService.updateProjectStatus(id);
+
         return ResponseEntity.ok(projetService.getProjetById(id));
 
     }
+
+    @GetMapping("/taches/user/{userId}")
+    public ResponseEntity<List<Tache>> getTachesByUserId(@PathVariable int userId) {
+        List<Tache> taches = projetService.getTachesByUserId(userId);
+        return ResponseEntity.ok(taches);
+    }
+
+
+    @PutMapping("/tache/{tacheId}/update")
+    public ResponseEntity<Tache> updateTache(@PathVariable int tacheId, @RequestBody Tache updatedTache) {
+        try {
+            Tache updatedTask = projetService.updateTache(tacheId, updatedTache);
+            return ResponseEntity.ok(updatedTask);  // Retourner la tâche mise à jour
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);  // Tâche non trouvée
+        }
+    }
+    @GetMapping("/{id}/taches")
+    public List<Tache> getTachesByProjet(@PathVariable("id") int idProjet) {
+        return projetService.getTachesByProjet(idProjet);
+    }
+    @GetMapping("/taches")
+    public List<Tache> getAllTaches() {
+        return projetService.getAllTaches(); // Récupère et renvoie toutes les tâches
+    }
+
+
+
+
 }

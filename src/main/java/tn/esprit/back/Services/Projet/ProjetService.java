@@ -13,13 +13,14 @@ import tn.esprit.back.Repository.Projet.ProjetRepository;
 import tn.esprit.back.Repository.Projet.TacheRepository;
 import tn.esprit.back.Repository.User.UserRepository;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,31 +30,24 @@ public class ProjetService {
     private final TacheRepository tacheRepository;
     private final UserRepository userRepository;
 
-    // Définir le répertoire d'upload des images
     @Value("${file.upload-dir}")
     private String uploadDir;
-
 
     public Projet addProjet(Projet projet) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByusername(username);
-
         projet.setCreateur(user);
         projet.setStatus(Status.NOT_BEGIN);
-
         return projetRepository.save(projet);
-
     }
 
     public Projet updateProjet(int id, Projet updatedProjet) {
-        Projet projet = projetRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Projet not found"));
+        Projet projet = getProjetById(id);
         projet.setNomProjet(updatedProjet.getNomProjet());
         projet.setDescription(updatedProjet.getDescription());
         projet.setDateDebut(updatedProjet.getDateDebut());
         projet.setDateFin(updatedProjet.getDateFin());
         projet.setNbreGestions(updatedProjet.getNbreGestions());
-
         return projetRepository.save(projet);
     }
 
@@ -61,39 +55,28 @@ public class ProjetService {
         projetRepository.deleteById(id);
     }
 
+    public Projet addTacheToProjet(int projetId, int userId, Tache tache) {
+        Projet projet = getProjetById(projetId);
+        User user = getUserById(userId);
 
-    public Projet addTacheToProjet(int projetId, int userId, Tache tache ) {
-        Projet projet = projetRepository.findById(projetId)
-                .orElseThrow(() -> new RuntimeException("Projet not found"));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Vérifier que la tâche est dans la période du projet
         if (tache.getDateDebut().isBefore(projet.getDateDebut()) || tache.getDateFin().isAfter(projet.getDateFin())) {
-            throw new RuntimeException("Tâche date out of project bounds");
+            throw new RuntimeException("La date de la tâche doit être entre " + projet.getDateDebut() + " et " + projet.getDateFin());
         }
 
-        // Vérifier que le nombre de tâches ne dépasse pas le nombre de gestions
         if (projet.getTaches() != null && projet.getTaches().size() >= projet.getNbreGestions()) {
-            throw new RuntimeException("Nombre maximal de tâches atteint");
+            throw new RuntimeException("Nombre maximal de tâches atteint.");
         }
 
-       // La langue passée en paramètre
-
-        // Ajouter la tâche au projet
         tache.setProjet(projet);
         tache.setUtilisateur(user);
         tache.setStatus(Status.NOT_BEGIN);
         Tache savedTache = tacheRepository.save(tache);
 
-
         if (projet.getTaches() == null) {
             projet.setTaches(new ArrayList<>());
         }
-
         projet.getTaches().add(savedTache);
 
-        // Incrémenter le nombre de membres disponibles (sans dépasser le nombre de gestions)
         if (projet.getNbreMembreDisponible() < projet.getNbreGestions()) {
             projet.setNbreMembreDisponible(projet.getNbreMembreDisponible() + 1);
         }
@@ -101,40 +84,28 @@ public class ProjetService {
         return projetRepository.save(projet);
     }
 
-
     public Projet deleteTacheFromProjet(int projetId, int tacheId) {
-        Projet projet = projetRepository.findById(projetId)
-                .orElseThrow(() -> new RuntimeException("Projet not found"));
+        Projet projet = getProjetById(projetId);
+        Tache tache = getTacheById(tacheId);
 
-        Tache tache = tacheRepository.findById(tacheId)
-                .orElseThrow(() -> new RuntimeException("Tâche not found"));
-
-        // Supprimer la tâche de la liste
         projet.getTaches().remove(tache);
-
-        // Supprimer la tâche de la base de données
         tacheRepository.delete(tache);
 
-        // Diminuer le nombre de membres disponibles
         if (projet.getNbreMembreDisponible() > 0) {
             projet.setNbreMembreDisponible(projet.getNbreMembreDisponible() - 1);
         }
-
-        // Mettre à jour le statut du projet
-        updateProjectStatus(projetId);
 
         return projetRepository.save(projet);
     }
 
 
+
     public Projet updateTacheFromProjet(int projetId, int tacheId, Tache updatedTache) {
-        Projet projet = projetRepository.findById(projetId)
-                .orElseThrow(() -> new RuntimeException("Projet not found"));
-        Tache tache = tacheRepository.findById(tacheId)
-                .orElseThrow(() -> new RuntimeException("Tâche not found"));
+        Projet projet = getProjetById(projetId);
+        Tache tache = getTacheById(tacheId);
 
         if (updatedTache.getDateDebut().isBefore(projet.getDateDebut()) || updatedTache.getDateFin().isAfter(projet.getDateFin())) {
-            throw new RuntimeException("Tâche date out of project bounds");
+            throw new RuntimeException("La date de la tâche est hors du projet.");
         }
 
         tache.setNomTache(updatedTache.getNomTache());
@@ -144,61 +115,36 @@ public class ProjetService {
         tache.setUtilisateur(updatedTache.getUtilisateur());
 
         tacheRepository.save(tache);
+        updateProjectStatus(projetId);
+
         return projetRepository.save(projet);
     }
-    public void updateProjectStatus(int projectId) {
-        Projet projet = projetRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Projet not found"));
 
-        List<Tache> tasks = projet.getTaches(); // Tu dois avoir le getter `getTaches()` dans Projet
+    public void ajouterParticipant(int idProjet, int idUser) {
+        Projet projet = getProjetById(idProjet);
+        User user = getUserById(idUser);
 
-        if (tasks.isEmpty()) {
-            projet.setStatus(Status.NOT_BEGIN);
-        } else {
-            boolean anyInProgress = tasks.stream().anyMatch(t -> t.getStatus() == Status.EN_COURS);
-            boolean allFinished = tasks.stream().allMatch(t -> t.getStatus() == Status.FINISHED);
-
-            if (anyInProgress) {
-                projet.setStatus(Status.EN_COURS);
-            } else if (allFinished) {
-                projet.setStatus(Status.FINISHED);
-            } else {
-                projet.setStatus(Status.NOT_BEGIN);
-            }
+        if (projet.getMembres().contains(user)) {
+            throw new RuntimeException("Utilisateur déjà inscrit.");
         }
 
+        if (projet.getNbreMembreDisponible() <= 0) {
+            throw new RuntimeException("Aucune place disponible.");
+        }
+
+        projet.getMembres().add(user);
+        projet.setNbreMembreDisponible(projet.getNbreMembreDisponible() - 1);
         projetRepository.save(projet);
     }
 
-
-    public Projet participateToProjet(int projetId, int userId) {
-        Projet projet = projetRepository.findById(projetId)
-                .orElseThrow(() -> new RuntimeException("Projet not found"));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (!projet.getMembres().contains(user)) {
-            projet.getMembres().add(user);
-        }
-
-        return projetRepository.save(projet);
-    }
-
     public Projet uploadImageToProjet(int projetId, MultipartFile file) throws IOException {
-        Projet projet = projetRepository.findById(projetId)
-                .orElseThrow(() -> new RuntimeException("Projet not found"));
+        Projet projet = getProjetById(projetId);
 
-        // Vérifier si l'image est présente et sauvegarder le fichier
         if (file != null && !file.isEmpty()) {
-            // Récupérer le nom de l'image
             String fileName = file.getOriginalFilename();
-
-            // Définir le chemin complet où le fichier sera sauvegardé
             Path path = Paths.get(uploadDir, fileName);
             Files.copy(file.getInputStream(), path);
-
-            // Mettre à jour l'image du projet avec le nom du fichier
-            projet.setImage(fileName);  // Enregistrer le nom du fichier dans la base de données
+            projet.setImage(fileName);
         }
 
         return projetRepository.save(projet);
@@ -210,6 +156,87 @@ public class ProjetService {
 
     public Projet getProjetById(int id) {
         return projetRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Projet not found"));
+                .orElseThrow(() -> new RuntimeException("Projet avec ID " + id + " non trouvé."));
     }
+
+    public User getUserById(int id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utilisateur avec ID " + id + " non trouvé."));
+    }
+
+    public Tache getTacheById(int id) {
+        return tacheRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tâche avec ID " + id + " non trouvée."));
+    }
+
+    public List<Tache> getTachesByUserId(int userId) {
+        return projetRepository.findAll().stream()
+                .flatMap(projet -> projet.getTaches().stream())
+                .filter(tache -> tache.getUtilisateur() != null && tache.getUtilisateur().getId() == userId)
+                .collect(Collectors.toList());
+    }
+
+    public void updateProjectStatus(int projetId) {
+        Projet projet = getProjetById(projetId);
+
+        boolean hasEnCours = false;
+        boolean allFinished = true;
+
+        for (Tache tache : projet.getTaches()) {
+            if (tache.getStatus() != Status.FINISHED && LocalDate.now().isAfter(tache.getDateFin())) {
+                tache.setStatus(Status.FINISHED);
+                tacheRepository.save(tache);
+            }
+
+            if (tache.getStatus() == Status.EN_COURS) {
+                hasEnCours = true;
+            }
+
+            if (tache.getStatus() != Status.FINISHED) {
+                allFinished = false;
+            }
+        }
+
+        if (projet.getTaches().isEmpty()) {
+            projet.setStatus(Status.NOT_BEGIN);
+        } else if (allFinished) {
+            projet.setStatus(Status.FINISHED);
+        } else if (hasEnCours) {
+            projet.setStatus(Status.EN_COURS);
+        } else {
+            projet.setStatus(Status.NOT_BEGIN);
+        }
+
+        projetRepository.save(projet);
+    }
+
+
+    public Tache updateTache(int tacheId, Tache updatedTache) {
+        Tache tache = tacheRepository.findById(tacheId)
+                .orElseThrow(() -> new RuntimeException("Tâche avec ID " + tacheId + " non trouvée."));
+
+        // Mettre à jour les informations de la tâche
+        tache.setNomTache(updatedTache.getNomTache());
+        tache.setDateDebut(updatedTache.getDateDebut());
+        tache.setDateFin(updatedTache.getDateFin());
+        tache.setDescription(updatedTache.getDescription());
+        tache.setStatus(updatedTache.getStatus());
+        tache.setImage(updatedTache.getImage());
+        tache.setLanguage(updatedTache.getLanguage());
+
+
+        // Sauvegarder la tâche mise à jour dans la base de données
+        return tacheRepository.save(tache);
+    }
+
+    public List<Tache> getTachesByProjet(int idProjet) {
+        Projet projet = getProjetById(idProjet); // récupère le projet avec ses tâches
+        return projet.getTaches(); // retourne directement les tâches du projet
+    }
+
+    public List<Tache> getAllTaches() {
+        return tacheRepository.findAll(); // récupère toutes les tâches
+    }
+
+
 }

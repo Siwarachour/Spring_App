@@ -39,7 +39,7 @@ public class JwtUtils {
         claims.put("username", username);
         claims.put("role", role);
 
-        claims.put("imageUrl",  imageUrl);
+
         return createToken(claims);
     }
 

@@ -56,17 +56,17 @@ private String description;
     @Column(nullable = true)
     private boolean approuve = true; // Par défaut non approuvé
 
-
+@JsonIgnore
     @ManyToMany
     private List<Projet> projetsParticipes;
 
     @Column(nullable = true)
     private String imageUrl;  // Ajoute cet attribut
 
-
+@JsonIgnore
     @ManyToMany(mappedBy = "membres")
     private List<Projet> projetsParticipe;
-
+@JsonIgnore
     @OneToMany(mappedBy = "utilisateur")
     private List<Tache> tachesAssignees;
 
