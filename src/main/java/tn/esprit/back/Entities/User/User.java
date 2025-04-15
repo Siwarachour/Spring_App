@@ -6,28 +6,36 @@ import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import tn.esprit.back.Entities.Projet.Projet;
 import tn.esprit.back.Entities.Projet.Tache;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import tn.esprit.back.Entities.Application.Application;
+import tn.esprit.back.Entities.Cv.Cv;
+import tn.esprit.back.Entities.Offre.Offre;
 import tn.esprit.back.Entities.Role.Role;
 import tn.esprit.back.Entities.coursCertificat.Cours;
 import tn.esprit.back.Entities.library.Department;
 import tn.esprit.back.Entities.library.Document;
 import tn.esprit.back.Entities.library.Review;
 
+import javax.security.auth.Subject;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.security.Principal;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(name = "user")
 @EntityListeners(AuditingEntityListener.class)
-
-
-public class User {
+public class User implements UserDetails, Principal {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,12 +54,53 @@ public class User {
     private boolean accountLocked = false;
     @Column(nullable = true)
     private String resetToken;
-private String description;
+    private String description;
     //private String role;
+
 
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
+
+
+    @OneToMany
+    private Set<Offre> offres;
+
+    @OneToMany
+    private Set<Application> applications;
+
+    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
+    private Cv cv;
+
+    // Principal method
+    @Override
+    public String getName() {
+        return username;  // Return the username for the Principal
+    }
+
+    @Override
+    public boolean implies(Subject subject) {
+        return Principal.super.implies(subject);
+    }
+
+    // UserDetails methods
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return UserDetails.super.isAccountNonExpired();
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return UserDetails.super.isAccountNonLocked();
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return UserDetails.super.isCredentialsNonExpired();
+    }
+
+
     @OneToMany(mappedBy = "createur")
     @JsonIgnore
 
@@ -60,17 +109,17 @@ private String description;
     @Column(nullable = true)
     private boolean approuve = true; // Par défaut non approuvé
 
-@JsonIgnore
+    @JsonIgnore
     @ManyToMany
     private List<Projet> projetsParticipes;
 
     @Column(nullable = true)
     private String imageUrl;  // Ajoute cet attribut
 
-@JsonIgnore
+    @JsonIgnore
     @ManyToMany(mappedBy = "membres")
     private List<Projet> projetsParticipe;
-@JsonIgnore
+    @JsonIgnore
     @OneToMany(mappedBy = "utilisateur")
     private List<Tache> tachesAssignees;
 
@@ -117,8 +166,6 @@ private String description;
     }
 
 
-
-
     public List<Projet> getProjetsCrees() {
         return projetsCrees;
     }
@@ -154,6 +201,12 @@ private String description;
 
     public String getUsername() {
         return username;
+    }
+
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
     }
 
     public String getPassword() {
@@ -243,15 +296,6 @@ private String description;
     public void setEmail(String email) {
         this.email = email;
     }
-
-    /*
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdDate;
-    @LastModifiedDate
-    @Column(insertable = false)
-    private LocalDateTime lastmodifiedDate;*/
-
 
 
     @ManyToOne
