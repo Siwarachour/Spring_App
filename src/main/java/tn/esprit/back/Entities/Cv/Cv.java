@@ -29,8 +29,9 @@ public class Cv {
 
     @ElementCollection
     @CollectionTable(name = "cv_experience", joinColumns = @JoinColumn(name = "cv_id"))
-    @Column(name = "experience_entry")
+    @Column(name = "experience_entry", columnDefinition = "TEXT")
     private List<String> experiences;
+
 
     @ElementCollection
     @CollectionTable(name = "cv_education", joinColumns = @JoinColumn(name = "cv_id"))

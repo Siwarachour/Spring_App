@@ -24,7 +24,6 @@ import java.util.Set;
 @Entity
 @Table(name = "user")
 @EntityListeners(AuditingEntityListener.class)
-@Data
 public class User implements UserDetails, Principal {
 
     @Id
@@ -65,7 +64,7 @@ public class User implements UserDetails, Principal {
     // UserDetails methods
     @Override
     public String getUsername() {
-        return (cv != null) ? cv.getName() : username;  // Use the username if cv is null
+        return username;  // Return the username for UserDetails
     }
 
     @Override

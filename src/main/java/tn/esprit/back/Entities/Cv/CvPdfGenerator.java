@@ -73,11 +73,21 @@ public class CvPdfGenerator {
             rightCell.add(new Paragraph(cv.getSkills()).setFontSize(12).setTextAlignment(TextAlignment.LEFT).setMarginBottom(5));
         }
 
-        // Experiences
+        // Experiences (Updated: Each experience with a label)
         if (cv.getExperiences() != null && !cv.getExperiences().isEmpty()) {
             rightCell.add(sectionTitle("Experience", highlight));
+            int experienceCount = 1; // To label each experience
             for (String exp : cv.getExperiences()) {
-                rightCell.add(new Paragraph("• " + exp).setFontSize(12).setMarginLeft(10).setMarginBottom(5));
+                // Add label and experience
+                rightCell.add(new Paragraph("Experience " + experienceCount++)
+                        .setBold()
+                        .setFontSize(14)
+                        .setFontColor(highlight)
+                        .setMarginTop(10));
+                rightCell.add(new Paragraph("• " + exp)
+                        .setFontSize(12)
+                        .setMarginLeft(10)
+                        .setMarginBottom(10)); // Adjusted margin for better separation
             }
         }
 
@@ -100,20 +110,29 @@ public class CvPdfGenerator {
         // Languages
         if (cv.getLanguages() != null && !cv.getLanguages().isEmpty()) {
             rightCell.add(sectionTitle("Languages", highlight));
-            rightCell.add(new Paragraph(String.join(", ", cv.getLanguages())).setFontSize(12).setMarginLeft(10).setMarginBottom(5));
+            rightCell.add(new Paragraph(String.join(", ", cv.getLanguages()))
+                    .setFontSize(12)
+                    .setMarginLeft(10)
+                    .setMarginBottom(5));
         }
 
         // Hobbies
         if (cv.getHobbies() != null && !cv.getHobbies().isEmpty()) {
             rightCell.add(sectionTitle("Hobbies", highlight));
-            rightCell.add(new Paragraph(String.join(", ", cv.getHobbies())).setFontSize(12).setMarginLeft(10).setMarginBottom(5));
+            rightCell.add(new Paragraph(String.join(", ", cv.getHobbies()))
+                    .setFontSize(12)
+                    .setMarginLeft(10)
+                    .setMarginBottom(5));
         }
 
         // Certificates
         if (cv.getCertificate() != null && !cv.getCertificate().isEmpty()) {
             rightCell.add(sectionTitle("Certificates", highlight));
             for (String cert : cv.getCertificate().split(",")) {
-                rightCell.add(new Paragraph("• " + cert.trim()).setFontSize(12).setMarginLeft(10).setMarginBottom(5));
+                rightCell.add(new Paragraph("• " + cert.trim())
+                        .setFontSize(12)
+                        .setMarginLeft(10)
+                        .setMarginBottom(5));
             }
         }
 

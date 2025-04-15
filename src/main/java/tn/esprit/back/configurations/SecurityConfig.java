@@ -49,8 +49,8 @@ public class SecurityConfig {
                 // Authorize requests
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/Projetback/swagger-ui/**", "/Projetback/v3/api-docs/**").permitAll()
-                        .requestMatchers("/Projetback/auth/login", "/Projetback/auth/register").permitAll()
-                        .requestMatchers("/login", "/register").permitAll()
+                        .requestMatchers("/Projetback/auth/login", "/Projetback/auth/register","/Projetback/api/auth/**").permitAll()
+                        .requestMatchers("/login", "/register","/auth/**").permitAll()
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
