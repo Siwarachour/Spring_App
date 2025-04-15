@@ -17,7 +17,9 @@ import tn.esprit.back.Services.Projet.TacheService;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/projets")
@@ -26,6 +28,19 @@ public class ProjetController {
 
     private final ProjetService projetService;
     private final TacheRepository tacheRepository;
+
+
+    @RestControllerAdvice
+    public class GlobalExceptionHandler {
+
+        @ExceptionHandler(RuntimeException.class)
+        public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", ex.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+    }
+
 
     @GetMapping("/all")
     public ResponseEntity<List<Projet>> getAllProjets() {
@@ -107,12 +122,21 @@ projet.setNbreGestions(nbreGestions);
     }
 
     @PutMapping("/{projetId}/tache/{tacheId}/update")
-    public ResponseEntity<Projet> updateTacheFromProjet(@PathVariable int projetId,
-                                                        @PathVariable int tacheId,
-                                                        @RequestBody Tache updatedTache) {
-
-        return ResponseEntity.ok(projetService.updateTacheFromProjet(projetId, tacheId, updatedTache));
+    public ResponseEntity<?> updateTacheFromProjet(@PathVariable int projetId,
+                                                   @PathVariable int tacheId,
+                                                   @RequestBody Tache updatedTache) {
+        try {
+            Projet projet = projetService.updateTacheFromProjet(projetId, tacheId, updatedTache);
+            return ResponseEntity.ok(projet);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Projet ou tâche non trouvé.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erreur serveur : " + e.getMessage());
+        }
     }
+
 
     @PostMapping("projets/{projetId}/participate/{userId}")
     public ResponseEntity<String> participerAuProjet(@PathVariable int projetId, @PathVariable int userId) {
@@ -163,5 +187,16 @@ projet.setNbreGestions(nbreGestions);
 
 
 
+    @DeleteMapping("/{idProjet}/taches/{idTache}")
+    public ResponseEntity<String> deleteTask(@PathVariable int idProjet, @PathVariable int idTache) {
+        try {
+            // Appeler le service pour supprimer la tâche
+            projetService.deleteTacheFromProjet(idProjet, idTache);
+            return ResponseEntity.ok("Tâche supprimée avec succès.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erreur lors de la suppression de la tâche.");
+        }
+    }
 
 }

@@ -100,6 +100,10 @@ public class ProjetService {
 
 
 
+    public boolean doesProjetExist(int tacheId) {
+        return projetRepository.existsById(tacheId);
+    }
+
     public Projet updateTacheFromProjet(int projetId, int tacheId, Tache updatedTache) {
         Projet projet = getProjetById(projetId);
         Tache tache = getTacheById(tacheId);
