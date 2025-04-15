@@ -40,16 +40,7 @@ public class DocumentController {
     private static final String UPLOAD_DIR = "uploads/";
 
     @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Document> updateDocument(
-            @RequestParam(value = "file", required = false) MultipartFile file,
-            @RequestParam("idDocument") Long idDocument,
-            @RequestParam("title") String title,
-            @RequestParam("description") String description,
-            @RequestParam("documentType") String documentType,
-            @RequestParam("keywords") String keywords,
-            @RequestParam("status") String status,
-            @RequestParam("categoryIds") List<Long> categoryIds) throws IOException {
-
+    public ResponseEntity<Document> updateDocument(@RequestParam(value = "file", required = false) MultipartFile file, @RequestParam("idDocument") Long idDocument, @RequestParam("title") String title, @RequestParam("description") String description, @RequestParam("documentType") String documentType, @RequestParam("keywords") String keywords, @RequestParam("status") String status, @RequestParam("categoryIds") List<Long> categoryIds) throws IOException {
         // Retrieve the existing document
         Document document = documentService.getDocumentById(idDocument);
         document.setTitle(title);
@@ -90,15 +81,7 @@ public class DocumentController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Document> addDocument(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("title") String title,
-            @RequestParam("description") String description,
-            @RequestParam("documentType") String documentType,
-            @RequestParam("keywords") String keywords,
-            @RequestParam("status") String status,
-            @RequestParam("categoryIds") List<Long> categoryIds) {
-
+    public ResponseEntity<Document> addDocument(@RequestParam("file") MultipartFile file, @RequestParam("title") String title, @RequestParam("description") String description, @RequestParam("documentType") String documentType, @RequestParam("keywords") String keywords, @RequestParam("status") String status, @RequestParam("categoryIds") List<Long> categoryIds) {
         // Upload the file to Cloudinary
         String fileUrl = cloudinaryService.uploadFile(file, "documents");  // Customize folder name if needed
         if (fileUrl == null) {
@@ -127,7 +110,6 @@ public class DocumentController {
 
         return ResponseEntity.ok(savedDocument);
     }
-
 
     @PostMapping("/addWithUser/{userId}")
     public Document addDocumentWithUser(@RequestBody Document document, @PathVariable Long userId) {
@@ -165,5 +147,9 @@ public class DocumentController {
         return ResponseEntity.notFound().build();
     }
 
+    @GetMapping("/user/{userId}/approved-count")
+    public int getApprovedDocumentsCount(@PathVariable Long userId) {
+        return documentService.countApprovedDocumentsByUser(userId);
+    }
 }
 

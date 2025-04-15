@@ -26,9 +26,15 @@ public class JwtUtils {
     private int expirationTime;
 
     // Générer le token en incluant un seul rôle
-    public String generateToken(String username, String role) {
+    public String generateToken(String username, String role, int id, String email, String firstName, String lastName) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role); // Ajout du rôle unique dans les claims
+        claims.put("role", role);
+        claims.put("id", id);
+        claims.put("email", email);
+        claims.put("firstName", firstName);
+        claims.put("lastName", lastName);
+
+
 
         // Créer le token avec les claims
         return createToken(claims, username);
@@ -116,4 +122,6 @@ public class JwtUtils {
                 .parseClaimsJws(token) // Analyser les claims du token
                 .getBody(); // Retourner les claims
     }
+
+
 }

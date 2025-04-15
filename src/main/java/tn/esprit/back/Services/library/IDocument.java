@@ -16,4 +16,6 @@ public interface IDocument {
     Document assignReviewToDocument(Long documentId, Long reviewId);
 
     Document addDocumentToCategory(Long documentId, Long categoryId);
+
+    int countApprovedDocumentsByUser(Long userId);
 }

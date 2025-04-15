@@ -128,7 +128,7 @@ public class AuthController {
         String role = user.getRole().getName().toString(); // Assurez-vous que 'getRole()' retourne un seul rôle
 
         // Générer un token JWT avec le rôle unique
-        String token = jwtUtils.generateToken(user.getUsername(), role);
+        String token = jwtUtils.generateToken(user.getUsername(), role,user.getId(),user.getEmail(),user.getFirstName(),user.getLastName());
 
         // Retourner le token dans la réponse
         return ResponseEntity.ok(new JwtResponce(token));

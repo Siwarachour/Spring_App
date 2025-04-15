@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Entities.library.Category;
 import tn.esprit.back.Entities.library.Document;
+import tn.esprit.back.Entities.library.DocumentStatus;
 import tn.esprit.back.Entities.library.Review;
 import tn.esprit.back.Repository.User.UserRepository;
 import tn.esprit.back.Repository.library.CategoryRepository;
@@ -80,5 +81,10 @@ public class DocumentService implements IDocument {
         Category category = categoryRepository.findById(categoryId).orElseThrow();
         document.getCategories().add(category);
         return documentRepository.save(document);
+    }
+
+    @Override
+    public int countApprovedDocumentsByUser(Long userId) {
+        return documentRepository.countByStudentIdAndStatus(userId, DocumentStatus.APPROVED);
     }
 }
