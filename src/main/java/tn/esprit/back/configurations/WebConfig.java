@@ -1,7 +1,5 @@
 package tn.esprit.back.configurations;
 
-
-
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -11,10 +9,8 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Maps the '/uploads/**' URL path to the physical 'uploads' folder on the file system
+        // Map '/uploads/**' to the physical directory under 'src/main/resources/uploads'
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:D:/doc/Bureau/PI/Back/src/main/resources/uploads/");
-
+                .addResourceLocations("classpath:/uploads/");  // Maps to 'src/main/resources/uploads/'
     }
 }
-

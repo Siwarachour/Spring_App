@@ -21,11 +21,11 @@ public class Applicationservice {
 
 
         // Retrieve the user from the UserRepository based on the username
-        User user = userRepository.findByusername("alaboss1"); // Assuming your UserRepository has a method to find by username
+        User user = userRepository.findByusername("ahmed2"); // Assuming your UserRepository has a method to find by username
         if (user != null) {
             // Set the connected user to the application
             application.setStudent(user);  // Assuming Application has a reference to User (e.g. setUser)
-
+            application.setCv(user.getCv());
             // Save the Application and return the saved ID or something else you want
             return applicationRepo.save(application).getId();
         } else {

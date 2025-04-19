@@ -109,7 +109,7 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequests loginRequest) {
 
         User user = userRepository.findByusername(loginRequest.getUsername());
-        System.out.println("uuser"+user);
+        System.out.println("uuser"+user.getUsername());
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));

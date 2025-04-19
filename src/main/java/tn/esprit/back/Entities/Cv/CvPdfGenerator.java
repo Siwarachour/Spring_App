@@ -22,7 +22,7 @@ public class CvPdfGenerator {
 
     public static String generateAndSavePdf(Cv cv) throws IOException {
         String fileName = "cv_" + cv.getId() + ".pdf";
-        String uploadDir = "C:/Users/21650/Desktop/Spring_App/src/main/java/tn/esprit/back/Entities/Cv/uploads/";
+        String uploadDir = "C:/Users/21650/Desktop/Spring_App-merge2/src/main/java/tn/esprit/back/Entities/Cv/uploads2/";
         Path path = Paths.get(uploadDir);
         if (!Files.exists(path)) Files.createDirectories(path);
 
