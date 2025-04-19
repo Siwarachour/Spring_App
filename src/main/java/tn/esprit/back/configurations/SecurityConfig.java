@@ -10,11 +10,13 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import tn.esprit.back.Services.User.CustomUserDetailsService;
-
+import tn.esprit.back.filter.JwtFilter;
 import java.util.Arrays;
+
 
 @Configuration
 @EnableWebSecurity
@@ -22,7 +24,7 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
-
+    private final JwtUtils jwtUtils;
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -41,10 +43,15 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/profile").authenticated()
-                        .requestMatchers("/uploads/**").permitAll()
-                        .requestMatchers("/assets/profile/**").permitAll()
-                        .requestMatchers("/api/auth/user/upload-image").authenticated()
+
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/auth/register").permitAll()
+                        .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
+
+
+
+
+
                         .anyRequest().permitAll() // ✅ autorise toutes les requêtes
 
                 )
@@ -54,8 +61,8 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
                         .defaultSuccessUrl("http://localhost:4201/", true)
-                );
-
+                )
+                .addFilterBefore(new JwtFilter(customUserDetailsService, jwtUtils), UsernamePasswordAuthenticationFilter.class); // Ajout du filtre JWT
 
         return httpSecurity.build();
     }

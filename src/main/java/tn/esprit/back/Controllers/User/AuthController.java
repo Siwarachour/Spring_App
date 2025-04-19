@@ -1,5 +1,6 @@
 package tn.esprit.back.Controllers.User;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,8 +37,10 @@ import tn.esprit.back.Services.User.RoleService;
 import tn.esprit.back.Services.User.UserService;
 import tn.esprit.back.configurations.JwtUtils;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -105,6 +110,139 @@ public class AuthController {
      return ResponseEntity.ok(response);
  }
 
+
+    @PostMapping("/register-face")
+    public ResponseEntity<Map<String, String>> registerWithImage(
+            @RequestPart("user") String userJson,
+            @RequestPart("image") MultipartFile imageFile,
+            HttpServletRequest request) {
+
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            // Convert JSON to User object
+            ObjectMapper mapper = new ObjectMapper();
+            User user = mapper.readValue(userJson, User.class);
+
+            log.info("Tentative d'inscription pour l'utilisateur : {}", user.getUsername());
+
+            // Validate uniqueness
+            if (userRepository.findByusername( user.getUsername()) != null) {
+                response.put("error", "Username is already in use");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            if (userRepository.findByEmail(user.getEmail()) != null) {
+                response.put("error", "Email is already in use");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Setting role
+            Role r = new Role();
+            r.setId(2);
+            user.setRole(r);
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            user.setApprouve(true);
+            // Save user
+            userRepository.save(user);
+
+            // Save image temporarily
+            File tempImage = File.createTempFile("signup_face_", ".jpg");
+            imageFile.transferTo(tempImage);
+
+            // Log the full absolute path of the temporary image
+            log.info("Image temporaire créée à: {}", tempImage.getAbsolutePath());
+
+            // Check if the temp image file exists
+            if (!tempImage.exists()) {
+                response.put("error", "Image file not found.");
+                return ResponseEntity.status(500).body(response);
+            }
+
+            // Pass the absolute path of the image and email to the Python script
+            File workingDirectory = new File("C:/face");  // Ensure this directory exists
+            String imagePath = tempImage.getAbsolutePath();
+            log.info("Passing image path to Python script: {}", imagePath);
+
+            // Pass both email and image path to Python script
+            ProcessBuilder pb = new ProcessBuilder("python", "signup.py", user.getEmail(), imagePath);
+            pb.directory(workingDirectory);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+
+            // Read Python output
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuilder output = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+            process.waitFor();
+
+            log.info("Python output: {}", output.toString());
+
+            response.put("message", "User registered successfully!");
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("Error during registration: ", e);
+            response.put("error", "Registration failed: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+
+
+    @PostMapping("/loginface")
+    public ResponseEntity<?> login_face(@RequestBody LoginRequests loginRequest) {
+        try {
+            // 1. Fetch user by username
+            User user = userRepository.findByusername(loginRequest.getUsername());
+            if (user == null) {
+                return ResponseEntity.badRequest().body("User not found");
+            }
+
+            // 2. Manually create a UserDetails-like object
+            List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(user.getRole().getName().name()));
+
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(user.getUsername(), null, authorities);
+
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+
+            // 3. Generate JWT token
+            String role = user.getRole().getName().name();
+            System.out.println("0000000000000000000000000000000000000000000000000"+role);
+            String token = jwtUtils.generateToken(user.getId(), user.getUsername(), role, user.getImageUrl());
+
+            Map<String, Object> authData = new HashMap<>();
+            authData.put("token", token);
+
+            return ResponseEntity.ok(authData);
+
+        } catch (Exception e) {
+            log.error("Face login error: " + e.getMessage());
+            return ResponseEntity.status(500).body("Internal server error");
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequests loginRequest) {
 
@@ -139,10 +277,8 @@ public class AuthController {
     }
 
 
-    @GetMapping("/welcome")
-        public String welcome(OAuth2AuthenticationToken authentication) {
-            return "Bienvenue, " + authentication.getPrincipal().getAttribute("name") + "!";
-        }
+
+
     @GetMapping("/api/auth/users/{id}/roles")
     public ResponseEntity<?> getRolesForUser(@PathVariable int id) {
         // Récupérer l'utilisateur par son ID
@@ -181,7 +317,7 @@ public class AuthController {
         userRepository.save(user);
 
         // Envoi de l'email avec le lien de réinitialisation
-        String resetLink = "http://localhost:4200/auth/reset-password?token=" + token;
+        String resetLink = "http://localhost:4201/auth/reset?token=" + token;
         sendResetPasswordEmail(user.getEmail(), resetLink);
 
         return ResponseEntity.ok(Collections.singletonMap("message", "Reset email sent successfully"));
@@ -285,7 +421,6 @@ public class AuthController {
 
     @Value("${file.upload-dir}")
     private String uploadDir;
-
     @PostMapping("/user/upload-image")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
         // Vérifie si le fichier est valide
@@ -299,27 +434,31 @@ public class AuthController {
             uploadDirFile.mkdirs(); // Crée le dossier si il n'existe pas
         }
 
-        // Obtenir le nom du fichier et le chemin complet
-        String fileName = file.getOriginalFilename();
-        Path filePath = Paths.get(uploadDir, fileName);
+        // Générer un nom unique pour le fichier avec l'extension d'origine
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
 
-        // Sauvegarder le fichier dans le dossier
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+
+        String generatedFileName = UUID.randomUUID().toString() + extension;
+        Path filePath = Paths.get(uploadDir, generatedFileName);
+
+        // Sauvegarder le fichier
         Files.copy(file.getInputStream(), filePath);
 
         // Récupérer l'utilisateur actuellement authentifié
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName(); // Récupère le nom d'utilisateur
-        User user = userRepository.findByusername(username); // Récupère l'utilisateur depuis la base de données
-        System.out.println(user.getUsername());
-        // Vérifie si l'utilisateur existe
-        if (user != null) {
-            // Associer l'image au profil de l'utilisateur
-            user.setImageUrl(fileName); // Sauvegarde le nom de l'image dans l'utilisateur
+        String username = authentication.getName();
+        User user = userRepository.findByusername(username);
 
-            // Sauvegarder l'utilisateur mis à jour
+        if (user != null) {
+            // Associer l'image générée à l'utilisateur
+            user.setImageUrl(generatedFileName);
             userRepository.save(user);
 
-            return ResponseEntity.ok("Fichier téléchargé et associé à l'utilisateur avec succès : " + fileName);
+            return ResponseEntity.ok("Fichier téléchargé et enregistré sous : " + generatedFileName);
         } else {
             return ResponseEntity.status(404).body("Utilisateur non trouvé.");
         }
@@ -329,7 +468,7 @@ public class AuthController {
     @GetMapping("/uploads/{imageName}")
     public ResponseEntity<Resource> getImage(@PathVariable String imageName) {
         // Charger l'image depuis le serveur
-        Path imagePath = Paths.get("C:/Users/ala/Desktop/pi/Spring_App/src/main/resources/uploads").resolve(imageName);
+        Path imagePath = Paths.get("D:/doc/Bureau/NOUVEAU/Back/Spring_App/src/main/resources/uploads").resolve(imageName);
         Resource resource = new FileSystemResource(imagePath);
 
         if (resource.exists() && resource.isReadable()) {
@@ -340,6 +479,7 @@ public class AuthController {
             return ResponseEntity.notFound().build();
         }
     }
+
 
     @PostMapping("/change-password")
     public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request) {
@@ -373,7 +513,66 @@ public class AuthController {
 
         return ResponseEntity.ok("Mot de passe changé avec succès.");
     }
+    @PostMapping("/facelogin")
+    public ResponseEntity<?> faceLogin(@RequestParam("image") MultipartFile file) {
+        try {
+            // 1. Save image temporarily
+            File tempImage = File.createTempFile("face_", ".jpg");
+            file.transferTo(tempImage);
 
+            // 2. Set the working directory where Python script is located
+            File workingDirectory = new File("C:/face");
+            if (!workingDirectory.exists() || !workingDirectory.isDirectory()) {
+                return ResponseEntity.status(500).body("Error: Working directory 'C:/face' not found.");
+            }
+
+            // 3. Call the Python script
+            ProcessBuilder pb = new ProcessBuilder("python", "login.py", tempImage.getAbsolutePath());
+            pb.directory(workingDirectory);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+
+            // 4. Read script output
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuilder output = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+            process.waitFor();
+
+            String result = output.toString().trim();
+            System.out.println("Recognized output: " + result);
+
+            // 5. If recognized, extract email and proceed with login_face-like logic
+            if (result.contains("@")) {
+                User user = userRepository.findByEmail(result);
+                if (user == null) {
+                    return ResponseEntity.badRequest().body("User not found");
+                }
+
+                List<GrantedAuthority> authorities =
+                        Collections.singletonList(new SimpleGrantedAuthority(user.getRole().getName().name()));
+
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(user.getUsername(), null, authorities);
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                String role = user.getRole().getName().name();
+                String token = jwtUtils.generateToken(user.getId(), user.getUsername(), role, user.getImageUrl());
+
+                Map<String, Object> authData = new HashMap<>();
+                authData.put("token", token);
+
+                return ResponseEntity.ok(authData);
+            } else {
+                return ResponseEntity.status(401).body("No match found.");
+            }
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Internal error: " + e.getMessage());
+        }
+    }
 
 
 
@@ -459,6 +658,7 @@ public class AuthController {
 
         return ResponseEntity.ok(statistics);
     }
+
 
 
 

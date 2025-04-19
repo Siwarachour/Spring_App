@@ -13,7 +13,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // Maps the '/uploads/**' URL path to the physical 'uploads' folder on the file system
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:D:/doc/Bureau/PI/Back/src/main/resources/uploads/");
+                .addResourceLocations("file:D:/doc/Bureau/NOUVEAU/Back/Spring_App/src/main/resources/uploads");
 
     }
 }

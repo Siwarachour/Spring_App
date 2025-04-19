@@ -17,11 +17,11 @@ public class Tache {
     private String nomTache;
     private LocalDate dateDebut;
     private LocalDate dateFin;
-private  String description;
-private String image;
-private String language;
+    private String description;
+    private String image;
+    private String language;
     @ManyToOne
-    @JsonIgnore
+    //@JsonIgnore
     private Projet projet;
 
     @ManyToOne

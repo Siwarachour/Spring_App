@@ -162,6 +162,16 @@ projet.setNbreGestions(nbreGestions);
     }
 
 
-
+    @DeleteMapping("/{idProjet}/taches/{idTache}")
+    public ResponseEntity<String> deleteTask(@PathVariable int idProjet, @PathVariable int idTache) {
+        try {
+            // Appeler le service pour supprimer la tâche
+            projetService.deleteTacheFromProjet(idProjet, idTache);
+            return ResponseEntity.ok("Tâche supprimée avec succès.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erreur lors de la suppression de la tâche.");
+        }
+    }
 
 }

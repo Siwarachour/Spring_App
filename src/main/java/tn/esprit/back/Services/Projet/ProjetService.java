@@ -238,5 +238,12 @@ public class ProjetService {
         return tacheRepository.findAll(); // récupère toutes les tâches
     }
 
+    public Tache findTacheById(int tacheId) {
+        return tacheRepository.findById(tacheId)
+                .orElseThrow(() -> new RuntimeException("Tâche avec ID " + tacheId + " non trouvée."));
+    }
+    public Tache saveTache(Tache tache) {
+        return tacheRepository.save(tache);
+    }
 
 }
