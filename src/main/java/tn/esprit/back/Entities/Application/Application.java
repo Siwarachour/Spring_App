@@ -1,4 +1,5 @@
 package tn.esprit.back.Entities.Application;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -52,8 +53,8 @@ private User student;
 
     @ManyToOne
     @JoinColumn(name = "cv_id", referencedColumnName = "id", nullable = false)
-    @JsonIgnore  // This will ignore the 'cv' field during JSON serialization/deserialization
     private Cv cv;
+
 
     @JsonGetter("offreId")
     public Integer getOffreId() {
@@ -62,6 +63,10 @@ private User student;
     @JsonGetter("cvid")
     public Integer getCvid() {
         return cv != null ? cv.getId() : null;
+    }
+    @JsonGetter("skills")
+    public String getSkills() {
+        return cv != null ? cv.getSkills() : null;
     }
 
     @JsonGetter("pdfDownloadLink")

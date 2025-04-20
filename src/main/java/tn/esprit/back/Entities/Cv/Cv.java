@@ -50,6 +50,7 @@ public class Cv {
     private List<String> languages; // Store languages as a list of strings
 
     @OneToMany(mappedBy = "cv")
+    @JsonIgnore
     private List<Application> applications;
 
 

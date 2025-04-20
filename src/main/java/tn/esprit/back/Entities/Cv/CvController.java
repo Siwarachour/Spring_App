@@ -123,7 +123,7 @@ public class CvController {
         }
 
         String fileName = "cv_" + cv.getId() + ".pdf";
-        String uploadDir = "C:/Users/21650/Desktop/Spring_App/src/main/java/tn/esprit/back/Entities/Cv/uploads/";
+        String uploadDir = "C:/Users/21650/Desktop/Spring_App-merge2/src/main/java/tn/esprit/back/Entities/Cv/uploads/";
         Path filePath = Paths.get(uploadDir).resolve(fileName);
         File file = filePath.toFile();
 

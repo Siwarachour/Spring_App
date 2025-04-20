@@ -10,6 +10,7 @@ import tn.esprit.back.Repository.User.UserRepository;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -81,10 +82,15 @@ public class OffreService {
             offre.setTitle(updatedOffre.getTitle());
             offre.setSkills(updatedOffre.getSkills());
             offre.setDescription(updatedOffre.getDescription());
+
+            // Update only specific fields, not the 'createdAt' or 'updatedAt'
+            offre.setCreatedAt(LocalDateTime.now());  // If you want to update the timestamp
+
             return offreRepo.save(offre);
         }
         return null;
     }
+
 
     // Delete offer
     public boolean deleteOffre(Long id) {

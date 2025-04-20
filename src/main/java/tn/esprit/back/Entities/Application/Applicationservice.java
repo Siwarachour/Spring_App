@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import tn.esprit.back.Entities.Feedback.Feedback;
+import tn.esprit.back.Entities.Feedback.FeedbackRepository;
 import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Repository.User.UserRepository;
 
@@ -15,24 +17,31 @@ public class Applicationservice {
 
     private final ApplicationRepo applicationRepo; // Repository for Application entity
     private final UserRepository userRepository;     // Repository for User entity
+    private final FeedbackRepository feedbackRepository;     // Repository for User entity
 
     public Object addApplication(Application application, Authentication connectedUser) {
-        // Retrieve the authentication details from the SecurityContext
 
-
-        // Retrieve the user from the UserRepository based on the username
-        User user = userRepository.findByusername("ahmed2"); // Assuming your UserRepository has a method to find by username
+        // Retrieve the user based on the username
+        User user = userRepository.findByusername("ahmed2");
         if (user != null) {
-            // Set the connected user to the application
-            application.setStudent(user);  // Assuming Application has a reference to User (e.g. setUser)
+            // Set the student (user) and their CV to the application
+            application.setStudent(user);
             application.setCv(user.getCv());
-            // Save the Application and return the saved ID or something else you want
+
+            // Automatically assign Feedback with id = 2
+            Feedback feedback = feedbackRepository.findById(2)
+                    .orElseThrow(() -> new RuntimeException("Feedback with ID 2 not found"));
+
+            application.setFeedback(feedback);
+
+            // Save the application and return its ID
             return applicationRepo.save(application).getId();
+
         } else {
-            // Handle the case where the user is not found
             throw new RuntimeException("User not found");
         }
     }
+
 
 
     public List<Application> getApplications() {
