@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 @Slf4j
@@ -69,47 +70,46 @@ public class AuthController {
     private final tn.esprit.back.Repository.User.roleRepository roleRepository;
 
 
+    @PostMapping("/register")
+    public ResponseEntity<Map<String, String>> register(@RequestBody User user, HttpServletRequest request) {
+        String csrfToken = request.getHeader("X-CSRF-TOKEN");
+        log.info("CSRF Token: {}", csrfToken);
+        log.info("Tentative d'inscription pour l'utilisateur : {}", user.getUsername());
 
- @PostMapping("/register")
- public ResponseEntity<Map<String, String>> register(@RequestBody User user, HttpServletRequest request) {
-     String csrfToken = request.getHeader("X-CSRF-TOKEN");
-     log.info("CSRF Token: {}", csrfToken);
-     log.info("Tentative d'inscription pour l'utilisateur : {}", user.getUsername());
+        Map<String, String> response = new HashMap<>();
 
-     Map<String, String> response = new HashMap<>();
+        if (userRepository.findByusername(user.getUsername()) != null) {
+            response.put("error", "Username is already in use");
+            return ResponseEntity.badRequest().body(response);
+        }
 
-     if (userRepository.findByusername(user.getUsername()) != null) {
-         response.put("error", "Username is already in use");
-         return ResponseEntity.badRequest().body(response);
-     }
+        if (userRepository.findByEmail(user.getEmail()) != null) {
+            response.put("error", "Email is already in use");
+            return ResponseEntity.badRequest().body(response);
+        }
 
-     if (userRepository.findByEmail(user.getEmail()) != null) {
-         response.put("error", "Email is already in use");
-         return ResponseEntity.badRequest().body(response);
-     }
+        // Vérification du rôle unique
+        Role existingRole = roleRepository.findById(user.getRole().getId()).orElse(null);
+        if (existingRole == null) {
+            response.put("error", "Role with id " + user.getRole().getId() + " not found");
+            return ResponseEntity.badRequest().body(response);
+        }
 
-     // Vérification du rôle unique
-     Role existingRole = roleRepository.findById(user.getRole().getId()).orElse(null);
-     if (existingRole == null) {
-         response.put("error", "Role with id " + user.getRole().getId() + " not found");
-         return ResponseEntity.badRequest().body(response);
-     }
-
-     user.setRole(existingRole); // Associer le rôle unique à l'utilisateur
-     user.setPassword(passwordEncoder.encode(user.getPassword()));
-     user.setApprouve(true); // utilisateur non approuvé à l’inscription
+        user.setRole(existingRole); // Associer le rôle unique à l'utilisateur
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setApprouve(true); // utilisateur non approuvé à l’inscription
 
 
-     userRepository.save(user);
-     response.put("message", "User registered successfully!");
-     return ResponseEntity.ok(response);
- }
+        userRepository.save(user);
+        response.put("message", "User registered successfully!");
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequests loginRequest) {
 
         User user = userRepository.findByusername(loginRequest.getUsername());
-        System.out.println("uuser"+user);
+        System.out.println("uuser" + user);
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
@@ -124,7 +124,7 @@ public class AuthController {
                 System.out.println("Authenticated User: " + username);
 
                 Map<String, Object> authData = new HashMap<>();
-                authData.put("token", jwtUtils.generateToken(user.getId(), user.getUsername(), role,user.getImageUrl()));
+                authData.put("token", jwtUtils.generateToken(user.getId(), user.getUsername(), role, user.getImageUrl()));
                 Authentication authenticationy = SecurityContextHolder.getContext().getAuthentication();
 
 
@@ -140,9 +140,10 @@ public class AuthController {
 
 
     @GetMapping("/welcome")
-        public String welcome(OAuth2AuthenticationToken authentication) {
-            return "Bienvenue, " + authentication.getPrincipal().getAttribute("name") + "!";
-        }
+    public String welcome(OAuth2AuthenticationToken authentication) {
+        return "Bienvenue, " + authentication.getPrincipal().getAttribute("name") + "!";
+    }
+
     @GetMapping("/api/auth/users/{id}/roles")
     public ResponseEntity<?> getRolesForUser(@PathVariable int id) {
         // Récupérer l'utilisateur par son ID
@@ -280,46 +281,58 @@ public class AuthController {
     }
 
 
-
-
-
     @Value("${file.upload-dir}")
     private String uploadDir;
 
     @PostMapping("/user/upload-image")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
-        // Vérifie si le fichier est valide
+        // Vérifie si un fichier est envoyé
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("Aucun fichier sélectionné.");
         }
 
-        // Créer le répertoire si nécessaire
-        File uploadDirFile = new File(uploadDir);
-        if (!uploadDirFile.exists()) {
-            uploadDirFile.mkdirs(); // Crée le dossier si il n'existe pas
+        // Vérifie que le fichier est bien une image
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            return ResponseEntity.badRequest().body("Seuls les fichiers image sont autorisés.");
         }
 
-        // Obtenir le nom du fichier et le chemin complet
-        String fileName = file.getOriginalFilename();
-        Path filePath = Paths.get(uploadDir, fileName);
+        // Créer le dossier s'il n'existe pas
+        File uploadDirFile = new File(uploadDir);
+        if (!uploadDirFile.exists()) {
+            uploadDirFile.mkdirs();
+        }
 
-        // Sauvegarder le fichier dans le dossier
-        Files.copy(file.getInputStream(), filePath);
+        // Nettoyer le nom de fichier original
+        String originalFileName = Paths.get(file.getOriginalFilename()).getFileName().toString();
 
-        // Récupérer l'utilisateur actuellement authentifié
+        // Extraire l'extension (ex: ".jpg", ".png")
+        String extension = "";
+        int i = originalFileName.lastIndexOf('.');
+        if (i >= 0) {
+            extension = originalFileName.substring(i);
+        }
+
+        // Générer un nom de fichier unique
+        String uniqueFileName = UUID.randomUUID().toString() + extension;
+
+        // Construire le chemin complet du fichier
+        Path filePath = Paths.get(uploadDir, uniqueFileName);
+
+        // Copier le fichier (remplace s'il existe)
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        // Récupérer l'utilisateur connecté
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName(); // Récupère le nom d'utilisateur
-        User user = userRepository.findByusername(username); // Récupère l'utilisateur depuis la base de données
-        System.out.println(user.getUsername());
-        // Vérifie si l'utilisateur existe
-        if (user != null) {
-            // Associer l'image au profil de l'utilisateur
-            user.setImageUrl(fileName); // Sauvegarde le nom de l'image dans l'utilisateur
+        String username = authentication.getName();
+        User user = userRepository.findByusername(username);
 
-            // Sauvegarder l'utilisateur mis à jour
+        if (user != null) {
+            // Associer l'image à l'utilisateur
+            user.setImageUrl(uniqueFileName);
             userRepository.save(user);
 
-            return ResponseEntity.ok("Fichier téléchargé et associé à l'utilisateur avec succès : " + fileName);
+            return ResponseEntity.ok("Fichier téléchargé avec succès : " + uniqueFileName);
         } else {
             return ResponseEntity.status(404).body("Utilisateur non trouvé.");
         }
@@ -375,37 +388,28 @@ public class AuthController {
     }
 
 
-
-
-
-
-
-
-
-
-
     private final UserService userService;
 
-        @GetMapping("/users")
-        public List<User> getAllUsers() {
-            return userService.getAllUsers();
-        }
+    @GetMapping("/users")
+    public List<User> getAllUsers() {
+        return userService.getAllUsers();
+    }
 
-        @PutMapping("/users/{id}")
-        public User updateUser(@PathVariable int id, @RequestBody User user) {
+    @PutMapping("/users/{id}")
+    public User updateUser(@PathVariable int id, @RequestBody User user) {
 
-            return userService.updateUser(id, user);
-        }
+        return userService.updateUser(id, user);
+    }
 
-        @DeleteMapping("/users/{id}")
-        public void deleteUser(@PathVariable int id) {
-            userService.deleteUser(id);
-        }
+    @DeleteMapping("/users/{id}")
+    public void deleteUser(@PathVariable int id) {
+        userService.deleteUser(id);
+    }
 
-        @PutMapping("/users/{id}/toggle-approval")
-        public User toggleUserApproval(@PathVariable int id) {
-            return userService.toggleApproval(id);
-        }
+    @PutMapping("/users/{id}/toggle-approval")
+    public User toggleUserApproval(@PathVariable int id) {
+        return userService.toggleApproval(id);
+    }
 
     @PostMapping("/users/add")
     public ResponseEntity<Map<String, String>> addUser(@RequestBody User user, HttpServletRequest request) {
@@ -459,9 +463,6 @@ public class AuthController {
 
         return ResponseEntity.ok(statistics);
     }
-
-
-
 
 
 }

@@ -4,14 +4,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import tn.esprit.back.Entities.Projet.Projet;
-import tn.esprit.back.Entities.Projet.Tache;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import tn.esprit.back.Entities.Application.Application;
 import tn.esprit.back.Entities.Cv.Cv;
 import tn.esprit.back.Entities.Offre.Offre;
+import tn.esprit.back.Entities.Projet.Projet;
+import tn.esprit.back.Entities.Projet.Tache;
 import tn.esprit.back.Entities.Role.Role;
 import tn.esprit.back.Entities.coursCertificat.Cours;
 import tn.esprit.back.Entities.library.Department;
@@ -19,13 +18,8 @@ import tn.esprit.back.Entities.library.Document;
 import tn.esprit.back.Entities.library.Review;
 
 import javax.security.auth.Subject;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.security.Principal;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 @Setter
@@ -40,270 +34,117 @@ public class User implements UserDetails, Principal {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
     private String username;
     private String password;
     private String firstName;
     private String lastName;
+
     @Column(unique = true)
     private String email;
+
     private String phone;
     private String address;
+
     @Temporal(TemporalType.DATE)
     private Date birthday;
-    private boolean enabled = true; // Default to true for new users
+
+    private boolean enabled = true;
     private boolean accountLocked = false;
+
     @Column(nullable = true)
     private String resetToken;
+
     private String description;
-    //private String role;
+    private boolean approuve = true;
 
+    @Column(nullable = true)
+    private String imageUrl;
 
+    // ===================== Role =====================
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
-
+    // ===================== Offre & Application =====================
     @OneToMany
     private Set<Offre> offres;
 
     @OneToMany
     private Set<Application> applications;
 
+    // ===================== CV =====================
     @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
     private Cv cv;
 
-    // Principal method
+    // ===================== Projet Relations =====================
+    @JsonIgnore
+    @OneToMany(mappedBy = "createur")
+    private List<Projet> projetsCrees;
+
+    @JsonIgnore
+    @ManyToMany
+    private List<Projet> projetsParticipes;
+
+    @JsonIgnore
+    @ManyToMany(mappedBy = "membres")
+    private List<Projet> projetsParticipe;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "utilisateur")
+    private List<Tache> tachesAssignees;
+
+    // ===================== Cours =====================
+    @ManyToMany(cascade = CascadeType.ALL)
+    private Set<Cours> cours;
+
+    // ===================== Library Module =====================
+    @JsonIgnore
+    @ManyToOne
+    private Department department;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
+    private List<Document> documents = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "reviewer")
+    private List<Review> reviews = new ArrayList<>();
+
+    // ===================== UserDetails =====================
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return !accountLocked;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    // ===================== Principal =====================
     @Override
     public String getName() {
-        return username;  // Return the username for the Principal
+        return username;
     }
 
     @Override
     public boolean implies(Subject subject) {
         return Principal.super.implies(subject);
     }
-
-    // UserDetails methods
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return UserDetails.super.isAccountNonExpired();
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return UserDetails.super.isAccountNonLocked();
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return UserDetails.super.isCredentialsNonExpired();
-    }
-
-
-    @OneToMany(mappedBy = "createur")
-    @JsonIgnore
-
-    private List<Projet> projetsCrees;
-
-    @Column(nullable = true)
-    private boolean approuve = true; // Par défaut non approuvé
-
-    @JsonIgnore
-    @ManyToMany
-    private List<Projet> projetsParticipes;
-
-    @Column(nullable = true)
-    private String imageUrl;  // Ajoute cet attribut
-
-    @JsonIgnore
-    @ManyToMany(mappedBy = "membres")
-    private List<Projet> projetsParticipe;
-    @JsonIgnore
-    @OneToMany(mappedBy = "utilisateur")
-    private List<Tache> tachesAssignees;
-
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public List<Projet> getProjetsParticipe() {
-        return projetsParticipe;
-    }
-
-    public void setProjetsParticipe(List<Projet> projetsParticipe) {
-        this.projetsParticipe = projetsParticipe;
-    }
-
-    public List<Tache> getTachesAssignees() {
-        return tachesAssignees;
-    }
-
-    public void setTachesAssignees(List<Tache> tachesAssignees) {
-        this.tachesAssignees = tachesAssignees;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-
-    public boolean isApprouve() {
-        return approuve;
-    }
-
-    public void setApprouve(boolean approuve) {
-        this.approuve = approuve;
-    }
-
-
-    public List<Projet> getProjetsCrees() {
-        return projetsCrees;
-    }
-
-    public void setProjetsCrees(List<Projet> projetsCrees) {
-        this.projetsCrees = projetsCrees;
-    }
-
-    public List<Projet> getProjetsParticipes() {
-        return projetsParticipes;
-    }
-
-    public void setProjetsParticipes(List<Projet> projetsParticipes) {
-        this.projetsParticipes = projetsParticipes;
-    }
-
-    public String getResetToken() {
-        return resetToken;
-    }
-
-
-    public void setResetToken(String resetToken) {
-        this.resetToken = resetToken;
-    }
-
-
-    public int getId() {
-        return id;
-    }
-
-    @ManyToMany(cascade = CascadeType.ALL)
-    private Set<Cours> cours;
-
-    public String getUsername() {
-        return username;
-    }
-
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public Date getBirthday() {
-        return birthday;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public boolean isAccountLocked() {
-        return accountLocked;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public void setAccountLocked(boolean accountLocked) {
-        this.accountLocked = accountLocked;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    public void setBirthday(Date birthday) {
-        this.birthday = birthday;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-
-    @ManyToOne
-    private Department department;
-    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
-    private List<Document> documents = new ArrayList<>();
-    @OneToMany(mappedBy = "reviewer")
-    private List<Review> reviews = new ArrayList<>();
-
-
 }

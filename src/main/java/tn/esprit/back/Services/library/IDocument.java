@@ -7,6 +7,7 @@ public interface IDocument {
 
     Document addDocument(Document document);
     Document updateDocument(Document document);
+
     void deleteDocument(long idDocument );
     List<Document> getAllDocument();
     Document getDocumentById(long idDocument);
@@ -18,4 +19,7 @@ public interface IDocument {
     Document addDocumentToCategory(Long documentId, Long categoryId);
 
     int countApprovedDocumentsByUser(Long userId);
+
+    Document approveDocument(long idDocument);
+
 }
