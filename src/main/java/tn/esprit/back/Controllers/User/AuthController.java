@@ -35,6 +35,7 @@ import tn.esprit.back.Requests.ForgotPasswordRequest;
 import tn.esprit.back.Requests.LoginRequests;
 import tn.esprit.back.Services.User.RoleService;
 import tn.esprit.back.Services.User.UserService;
+import tn.esprit.back.configurations.CaptchaService;
 import tn.esprit.back.configurations.JwtUtils;
 
 import java.io.BufferedReader;
@@ -68,7 +69,7 @@ public class AuthController {
     private final JavaMailSender mailSender;
 
     private final UserRepository userRepository;
-
+   private  final CaptchaService captchaService;
 
     private final AuthenticationManager authenticationManager;
     private final tn.esprit.back.Repository.User.roleRepository roleRepository;
@@ -231,20 +232,12 @@ public class AuthController {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequests loginRequest) {
+
+        if (!captchaService.verify(loginRequest.getCaptcha())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("reCAPTCHA validation failed");
+        }
 
         User user = userRepository.findByusername(loginRequest.getUsername());
         System.out.println("uuser"+user);
@@ -253,20 +246,13 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
             if (authentication.isAuthenticated()) {
-
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                String role = user.getRole().getName().toString();
-
-
+                String role = user.getRole().getName().name();
                 String username = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
-                System.out.println("Authenticated User: " + username);
 
                 Map<String, Object> authData = new HashMap<>();
-                authData.put("token", jwtUtils.generateToken(user.getId(), user.getUsername(), role,user.getImageUrl()));
-                Authentication authenticationy = SecurityContextHolder.getContext().getAuthentication();
+                authData.put("token", jwtUtils.generateToken(user.getId(), user.getUsername(), role, user.getImageUrl()));
 
-
-                System.out.println(authenticationy + " haaaaaa");
                 return ResponseEntity.ok(authData);
             }
             return ResponseEntity.badRequest().body("Invalid username or password");

@@ -2,8 +2,12 @@ package tn.esprit.back.Services.Projet;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.back.Entities.Projet.Projet;
 import tn.esprit.back.Entities.Projet.Tache;
@@ -18,8 +22,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -141,12 +147,24 @@ public class ProjetService {
         Projet projet = getProjetById(projetId);
 
         if (file != null && !file.isEmpty()) {
-            String fileName = file.getOriginalFilename();
-            Path path = Paths.get(uploadDir, fileName);
+            // Extraire l'extension du fichier
+            String originalFileName = file.getOriginalFilename();
+            String fileExtension = originalFileName != null ? originalFileName.substring(originalFileName.lastIndexOf(".")) : "";
+
+            // Créer un nom de fichier unique en utilisant UUID
+            String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
+
+            // Définir le chemin d'enregistrement du fichier
+            Path path = Paths.get(uploadDir, uniqueFileName);
+
+            // Enregistrer le fichier dans le répertoire spécifié
             Files.copy(file.getInputStream(), path);
-            projet.setImage(fileName);
+
+            // Mettre à jour l'image du projet avec le nouveau nom de fichier
+            projet.setImage(uniqueFileName);
         }
 
+        // Sauvegarder et retourner le projet avec la nouvelle image
         return projetRepository.save(projet);
     }
 
@@ -245,5 +263,7 @@ public class ProjetService {
     public Tache saveTache(Tache tache) {
         return tacheRepository.save(tache);
     }
+
+
 
 }
