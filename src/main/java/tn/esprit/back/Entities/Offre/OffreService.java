@@ -23,7 +23,7 @@ public class OffreService {
     // Corrected image folder path to be outside of src/main/java
     private final String IMAGE_FOLDER = System.getProperty("user.dir") + "/uploads/offreimg/";
 
-    @CrossOrigin(origins = "http://localhost:4200", allowedHeaders = "*", allowCredentials = "true")
+    @CrossOrigin(origins = "http://localhost:4201", allowedHeaders = "*", allowCredentials = "true")
     public Long addOffre(Offre offre, MultipartFile image) {
         // Authentication check
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -33,6 +33,9 @@ public class OffreService {
 
         String username = authentication.getName();
         System.out.println("Username from JWT: " + username);
+
+        // Define the new image folder path
+        String IMAGE_FOLDER = "C:\\Users\\21650\\Desktop\\Spring_App-merge2\\src\\main\\resources\\uploads\\offreimages\\";
 
         // Handle image saving
         if (image != null && !image.isEmpty()) {
@@ -49,7 +52,7 @@ public class OffreService {
                 image.transferTo(dest);
 
                 // Set the image path in the entity (relative path for frontend access)
-                offre.setImageUrl("uploads/offreimg/" + fileName);  // relative path for frontend
+                offre.setImageUrl("uploads/offreimages/" + fileName);  // relative path for frontend
             } catch (IOException e) {
                 throw new RuntimeException("Error saving image: " + e.getMessage());
             }

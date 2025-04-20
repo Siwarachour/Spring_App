@@ -50,9 +50,11 @@ private User student;
         return student != null ? student.getUsername() : null;
     }
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JsonInclude(JsonInclude.Include.NON_NULL)  // Ensure it's included when not null
+    @ManyToOne
+    @JoinColumn(name = "cv_id", referencedColumnName = "id", nullable = false)
+    @JsonIgnore  // This will ignore the 'cv' field during JSON serialization/deserialization
     private Cv cv;
+
     @JsonGetter("offreId")
     public Integer getOffreId() {
         return offre != null ? offre.getId() : null;

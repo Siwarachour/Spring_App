@@ -7,6 +7,7 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import tn.esprit.back.Entities.Application.Application;
 import tn.esprit.back.Entities.User.User;
 
 import java.util.List;
@@ -47,6 +48,11 @@ public class Cv {
     @CollectionTable(name = "cv_languages", joinColumns = @JoinColumn(name = "cv_id"))
     @Column(name = "language_entry")
     private List<String> languages; // Store languages as a list of strings
+
+    @OneToMany(mappedBy = "cv")
+    private List<Application> applications;
+
+
 
     @ElementCollection
     @CollectionTable(name = "cv_hobbies", joinColumns = @JoinColumn(name = "cv_id"))
