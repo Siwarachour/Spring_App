@@ -87,4 +87,18 @@ public class DocumentService implements IDocument {
     public int countApprovedDocumentsByUser(Long userId) {
         return documentRepository.countByStudentIdAndStatus(userId, DocumentStatus.APPROVED);
     }
+
+    @Override
+    public Document approveDocument(long idDocument) {
+        Optional<Document> optionalDoc = documentRepository.findById(idDocument);
+        if (!optionalDoc.isPresent()) {
+            throw new RuntimeException("Document not found with ID: " + idDocument);
+        }
+        Document document = optionalDoc.get();
+        document.setStatus(DocumentStatus.APPROVED);
+        return documentRepository.save(document);
+    }
+
+
+
 }

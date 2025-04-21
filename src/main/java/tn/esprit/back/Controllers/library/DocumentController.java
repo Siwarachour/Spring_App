@@ -1,4 +1,5 @@
 package tn.esprit.back.Controllers.library;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,9 +8,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Entities.library.Document;
 import tn.esprit.back.Entities.library.DocumentStatus;
 import tn.esprit.back.Entities.library.DocumentType;
+import tn.esprit.back.Repository.User.UserRepository;
 import tn.esprit.back.Repository.library.DocumentRepository;
 import tn.esprit.back.Services.library.IDocument;
 import tn.esprit.back.Services.library.CloudinaryService;
@@ -25,6 +28,7 @@ import java.util.List;
 import java.util.Optional;
 
 
+@Slf4j
 @RestController
 @RequestMapping("/document")
 public class DocumentController {
@@ -36,6 +40,8 @@ public class DocumentController {
     private CloudinaryService cloudinaryService;
     @Autowired
     private DocumentRepository documentRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     private static final String UPLOAD_DIR = "uploads/";
 
@@ -69,6 +75,14 @@ public class DocumentController {
     public List<Document> getAllDocument() {
         return documentService.getAllDocument();
     }
+    @GetMapping("/approved")
+    public List<Document> getApprovedDocuments() {
+        return documentRepository.findByStatus(DocumentStatus.APPROVED);
+    }
+    @GetMapping("/pending")
+    public List<Document> getPendingDocuments() {
+        return documentRepository.findByStatus(DocumentStatus.PENDING);
+    }
 
     @GetMapping("/retrieve/{idDocument}")
     public Document getDocumentById(@PathVariable long idDocument) {
@@ -81,7 +95,14 @@ public class DocumentController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Document> addDocument(@RequestParam("file") MultipartFile file, @RequestParam("title") String title, @RequestParam("description") String description, @RequestParam("documentType") String documentType, @RequestParam("keywords") String keywords, @RequestParam("status") String status, @RequestParam("categoryIds") List<Long> categoryIds) {
+    public ResponseEntity<Document> addDocument(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("title") String title,
+            @RequestParam("description") String description,
+            @RequestParam("documentType") String documentType,
+            @RequestParam("keywords") String keywords,
+            @RequestParam("categoryIds") List<Long> categoryIds) {
+
         // Upload the file to Cloudinary
         String fileUrl = cloudinaryService.uploadFile(file, "documents");  // Customize folder name if needed
         if (fileUrl == null) {
@@ -97,7 +118,7 @@ public class DocumentController {
         document.setDescription(description);
         document.setDocumentType(DocumentType.valueOf(documentType));
         document.setKeywords(keywords);
-        document.setStatus(DocumentStatus.valueOf(status));
+        document.setStatus(DocumentStatus.APPROVED);
         document.setFileUrl(fileUrl);  // Use the Cloudinary URL instead of local file path
 
         // Save the document
@@ -110,6 +131,57 @@ public class DocumentController {
 
         return ResponseEntity.ok(savedDocument);
     }
+
+    @PostMapping("/upload")
+    public ResponseEntity<Document> uploadDocument(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("title") String title,
+            @RequestParam("description") String description,
+            @RequestParam("documentType") String documentType,
+            @RequestParam("categoryIds") List<Long> categoryIds,
+            @RequestParam("userId") int userId) {
+
+        // Upload to Cloudinary
+        String fileUrl = cloudinaryService.uploadFile(file, "documents");
+        if (fileUrl == null) {
+            Document errorDoc = new Document();
+            errorDoc.setTitle("File upload failed");
+            return ResponseEntity.badRequest().body(errorDoc);
+        }
+
+        // 🔽 Fetch user manually
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        // Create Document
+        Document document = new Document();
+        document.setTitle(title);
+        document.setDescription(description);
+        document.setDocumentType(DocumentType.valueOf(documentType));
+        document.setFileUrl(fileUrl);
+        document.setStatus(DocumentStatus.PENDING);
+        document.setStudent(user); // 👈 Attach user
+
+        // Save Document
+        Document savedDocument = documentRepository.save(document);
+
+        // Assign Categories
+        categoryIds.forEach(catId -> {
+            affectCategoryToDocument(savedDocument.getIdDocument(), catId);
+        });
+
+        return ResponseEntity.ok(savedDocument);
+    }
+
+
+    @PostMapping("/updateStatus/{idDocument}")
+    public Document approveDocument(@PathVariable Long idDocument){
+        return documentService.approveDocument(idDocument);
+    }
+
+
 
     @PostMapping("/addWithUser/{userId}")
     public Document addDocumentWithUser(@RequestBody Document document, @PathVariable Long userId) {

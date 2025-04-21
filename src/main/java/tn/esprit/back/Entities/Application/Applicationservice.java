@@ -34,6 +34,11 @@ public class Applicationservice {
         }
     }
 
+    public List<User> getUsersWithAcceptedApplications() {
+        return applicationRepo.findUsersWithAcceptedApplications();
+    }
+
+
 
     public List<Application> getApplications() {
         return applicationRepo.findAll();
@@ -43,4 +48,12 @@ public class Applicationservice {
     // public void updateApplication(Application application) { ... }
     // public List<Application> getAllApplications
     // You could add other methods like updateApplication, getApplications, etc. depending on your needs
+
+
+    public Application updateInterviewStatus(Integer applicationId, InterviewStatus status) {
+        Application app = applicationRepo.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Application not found"));
+        app.setResult(status);
+        return applicationRepo.save(app);
+    }
 }
