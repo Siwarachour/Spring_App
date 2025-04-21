@@ -29,34 +29,31 @@ public class Cv {
     private String skills;
 
     @ElementCollection
-    @CollectionTable(name = "cv_experience", joinColumns = @JoinColumn(name = "cv_id"))
+    @CollectionTable(name = "cv_experience", joinColumns = @JoinColumn(name = "cv_id", nullable = true))  // Allow nullable cv_id
     @Column(name = "experience_entry", columnDefinition = "TEXT")
     private List<String> experiences;
 
-
     @ElementCollection
-    @CollectionTable(name = "cv_education", joinColumns = @JoinColumn(name = "cv_id"))
+    @CollectionTable(name = "cv_education", joinColumns = @JoinColumn(name = "cv_id", nullable = true))  // Allow nullable cv_id
     @Column(name = "education_entry")
     private List<String> educations;
 
     @ElementCollection
-    @CollectionTable(name = "cv_projects", joinColumns = @JoinColumn(name = "cv_id"))
+    @CollectionTable(name = "cv_projects", joinColumns = @JoinColumn(name = "cv_id", nullable = true))  // Allow nullable cv_id
     @Column(name = "project_entry")
     private List<String> projects;
 
     @ElementCollection
-    @CollectionTable(name = "cv_languages", joinColumns = @JoinColumn(name = "cv_id"))
+    @CollectionTable(name = "cv_languages", joinColumns = @JoinColumn(name = "cv_id", nullable = true))  // Allow nullable cv_id
     @Column(name = "language_entry")
-    private List<String> languages; // Store languages as a list of strings
+    private List<String> languages;
 
     @OneToMany(mappedBy = "cv")
     @JsonIgnore
     private List<Application> applications;
 
-
-
     @ElementCollection
-    @CollectionTable(name = "cv_hobbies", joinColumns = @JoinColumn(name = "cv_id"))
+    @CollectionTable(name = "cv_hobbies", joinColumns = @JoinColumn(name = "cv_id", nullable = true))  // Allow nullable cv_id
     @Column(name = "hobby_entry")
     private List<String> hobbies;
 

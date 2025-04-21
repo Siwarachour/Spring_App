@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import tn.esprit.back.Repository.User.UserRepository;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,12 +27,13 @@ public class CvController {
 
     private final CvService cvService;
     private final CvRepo cvRepo;
+    private final UserRepository userRepository;
 
     // Method to add CV (already existing)
     @PostMapping("/add")
     public Object addCv(@RequestBody Cv cv) {  // Make sure @RequestBody is used if expecting a JSON body
         System.out.println("Received CV data: " + cv);  // Debug the incoming CV object
-
+        cv.setStudent(userRepository.findByusername("ahmed2"));
         // Save the CV to the database
         Cv savedCv = cvRepo.save(cv);
         System.out.println("Saved CV with ID: " + savedCv.getId());  // Debug the saved CV ID

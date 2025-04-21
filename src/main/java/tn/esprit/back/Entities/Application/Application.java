@@ -31,6 +31,8 @@ public class Application {
 @JsonIgnore
 private User student;
 
+    @Column(nullable = true)
+    private String condidat;
 
     private String motivatedlettre;
 
@@ -40,8 +42,9 @@ private User student;
      @Enumerated(EnumType.STRING)
      ApplicationStatus status;
 
-    @OneToOne( optional = true)
+    @ManyToOne(optional = true)
     private Feedback feedback;
+
     @JsonGetter("studentId")  // This will be the name of the field in the JSON response
     public Integer getStudentId() {
         return student != null ? student.getId() : null;

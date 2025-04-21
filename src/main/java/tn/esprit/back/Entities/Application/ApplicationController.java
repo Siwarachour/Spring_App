@@ -14,9 +14,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ApplicationController {
     private final Applicationservice applicationservice;
+    private final ApplicationRepo applicationrepo;
     @PostMapping("/add")
     public ResponseEntity<Integer> addapplication(@RequestBody Application application, Authentication connecteduser) {
         return ResponseEntity.ok((Integer) applicationservice.addApplication(application,connecteduser));
+    }
+    // Example in Spring Boot
+    @PutMapping("/update")
+    public ResponseEntity<Application> updateApplication(@RequestBody Application application) {
+        Application updated = applicationrepo.save(application);  // this should save the new status!
+        return ResponseEntity.ok(updated);
     }
 
     @GetMapping("/getall")
