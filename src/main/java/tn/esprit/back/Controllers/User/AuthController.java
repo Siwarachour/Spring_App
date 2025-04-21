@@ -240,7 +240,17 @@ public class AuthController {
         }
 
         User user = userRepository.findByusername(loginRequest.getUsername());
-        System.out.println("uuser"+user);
+        System.out.println("uuser" + user);
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid username or password");
+        }
+
+        // Vérification du champ "approuve"
+        if (user.isApprouve() == false) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Failed to connect: You are disapproved");
+        }
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
@@ -261,6 +271,8 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Invalid username or password");
         }
     }
+
+
 
 
 

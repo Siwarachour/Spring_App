@@ -23,9 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -103,7 +101,6 @@ public class ProjetService {
 
         return projetRepository.save(projet);
     }
-
 
 
     public Projet updateTacheFromProjet(int projetId, int tacheId, Tache updatedTache) {
@@ -260,8 +257,37 @@ public class ProjetService {
         return tacheRepository.findById(tacheId)
                 .orElseThrow(() -> new RuntimeException("Tâche avec ID " + tacheId + " non trouvée."));
     }
+
     public Tache saveTache(Tache tache) {
         return tacheRepository.save(tache);
+    }
+
+
+    public Map<String, Object> getStatistiques() {
+        Map<String, Object> stats = new HashMap<>();
+
+        List<Projet> projets = projetRepository.findAll();
+        List<Tache> taches = tacheRepository.findAll();
+
+        // Projets
+        stats.put("totalProjets", projets.size());
+        stats.put("projetsNotBegin", projets.stream().filter(p -> p.getStatus() == Status.NOT_BEGIN).count());
+        stats.put("projetsEnCours", projets.stream().filter(p -> p.getStatus() == Status.EN_COURS).count());
+        stats.put("projetsFinished", projets.stream().filter(p -> p.getStatus() == Status.FINISHED).count());
+
+        // Moyenne de tâches par projet
+        double moyenneTachesParProjet = projets.stream()
+                .mapToInt(p -> p.getTaches() != null ? p.getTaches().size() : 0)
+                .average().orElse(0.0);
+        stats.put("moyenneTachesParProjet", moyenneTachesParProjet);
+
+        // Tâches
+        stats.put("totalTaches", taches.size());
+        stats.put("tachesNotBegin", taches.stream().filter(t -> t.getStatus() == Status.NOT_BEGIN).count());
+        stats.put("tachesEnCours", taches.stream().filter(t -> t.getStatus() == Status.EN_COURS).count());
+        stats.put("tachesFinished", taches.stream().filter(t -> t.getStatus() == Status.FINISHED).count());
+
+        return stats;
     }
 
 

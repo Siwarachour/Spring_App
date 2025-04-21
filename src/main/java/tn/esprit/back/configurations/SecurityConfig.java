@@ -24,6 +24,7 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final JwtUtils jwtUtils;
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -60,7 +61,7 @@ public class SecurityConfig {
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
-                        .defaultSuccessUrl("http://localhost:4201/", true)
+                        .successHandler(oAuth2SuccessHandler)
                 )
                 .addFilterBefore(new JwtFilter(customUserDetailsService, jwtUtils), UsernamePasswordAuthenticationFilter.class); // Ajout du filtre JWT
 

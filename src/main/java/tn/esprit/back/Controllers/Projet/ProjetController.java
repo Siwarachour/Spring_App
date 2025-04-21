@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/projets")
@@ -172,6 +173,13 @@ projet.setNbreGestions(nbreGestions);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Erreur lors de la suppression de la tâche.");
         }
+    }
+
+
+
+    @GetMapping("/statistiques")
+    public ResponseEntity<Map<String, Object>> getStatistiques() {
+        return ResponseEntity.ok(projetService.getStatistiques());
     }
 
 }
