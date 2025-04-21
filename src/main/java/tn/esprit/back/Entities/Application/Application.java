@@ -1,4 +1,7 @@
 package tn.esprit.back.Entities.Application;
+
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -12,7 +15,7 @@ import tn.esprit.back.Entities.Feedback.Feedback;
 import tn.esprit.back.Entities.Offre.Offre;
 import tn.esprit.back.Entities.User.User;
 
-import java.util.List;
+
 @EntityListeners(AuditingEntityListener.class)
 @Builder
 @Entity
@@ -25,10 +28,10 @@ public class Application {
  @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-//gfd
-@ManyToOne
-@JsonIgnore
-private User student;
+   //gfd
+   @ManyToOne
+   @JsonIgnore
+   private User student;
 
 
     private String motivatedlettre;
@@ -36,8 +39,15 @@ private User student;
      @ManyToOne
      Offre offre;
 
+
+
+
      @Enumerated(EnumType.STRING)
      ApplicationStatus status;
+
+    @Enumerated(EnumType.STRING)
+    InterviewStatus result;
+
 
     @OneToOne( optional = true)
     private Feedback feedback;
