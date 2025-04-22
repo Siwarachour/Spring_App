@@ -22,9 +22,9 @@ public class OffreService {
     private final UserRepository userRepository;
 
     // Corrected image folder path to be outside of src/main/java
-    private final String IMAGE_FOLDER = System.getProperty("user.dir") + "/uploads/offreimages/";
+    private final String IMAGE_FOLDER = System.getProperty("user.dir") ;
 
-    @CrossOrigin(origins = "http://localhost:4201", allowedHeaders = "*", allowCredentials = "true")
+    @CrossOrigin(origins = "http://localhost:4200", allowedHeaders = "*", allowCredentials = "true")
     public Long addOffre(Offre offre, MultipartFile image) {
         // Authentication check
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -36,7 +36,7 @@ public class OffreService {
         System.out.println("Username from JWT: " + username);
 
         // Define the new image folder path
-        String IMAGE_FOLDER = "D:\\doc\\Bureau\\NOUVEAU\\Back\\Spring_App\\uploads\\offreimages\\";
+        String IMAGE_FOLDER = "D:/doc/Bureau/NOUVEAU/Back/Spring_App/src/main/resources/uploads/offreimages/";
 
 
         // Handle image saving
@@ -54,7 +54,7 @@ public class OffreService {
                 image.transferTo(dest);
 
                 // Set the image path in the entity (relative path for frontend access)
-                offre.setImageUrl("uploads/offreimages/" + fileName);  // relative path for frontend
+                offre.setImageUrl( fileName);  // relative path for frontend
             } catch (IOException e) {
                 throw new RuntimeException("Error saving image: " + e.getMessage());
             }
