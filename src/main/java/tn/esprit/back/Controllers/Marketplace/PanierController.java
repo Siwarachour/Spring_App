@@ -1,6 +1,7 @@
 package tn.esprit.back.Controllers.Marketplace;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -8,8 +9,10 @@ import tn.esprit.back.Entities.Marketplace.Panier;
 import tn.esprit.back.Services.Marketplace.PanierService;
 import tn.esprit.back.Services.User.CustomUserDetailsService;
 
+import java.util.Map;
+
 @RestController
-@RequestMapping("/api/marketplace/panier")
+@RequestMapping("/api/panier")
 @RequiredArgsConstructor
 public class PanierController {
     private final PanierService panierService;
@@ -22,9 +25,22 @@ public class PanierController {
     }
 
     @PostMapping("/items/{itemId}")
-    public ResponseEntity<Panier> addItemToPanier(@PathVariable Long itemId, Authentication authentication) {
-        int userId = userService.getConnectedUser().getId();
-        return ResponseEntity.ok(panierService.addItemToPanier(userId, itemId));
+    public ResponseEntity<?> addItemToPanier(@PathVariable Long itemId, Authentication authentication) {
+        try {
+            int userId = userService.getConnectedUser().getId();
+            Panier panier = panierService.addItemToPanier(userId, itemId);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Item added to cart",
+                    "cart", panier
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
+        }
     }
 
     @DeleteMapping("/items/{itemId}")

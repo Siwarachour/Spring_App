@@ -1,5 +1,6 @@
 package tn.esprit.back.configurations;
 
+import io.swagger.models.HttpMethod;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,13 +50,22 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
 
+                        // 🔒 Sécurité des endpoints de la marketplace
+                        .requestMatchers("/api/items/pending",
+                                "/api/items/*/approve",
+                                "/api/items/*/reject")
+                        .hasRole("ADMIN")
+                        .requestMatchers("/api/items").permitAll()
+                        .requestMatchers(String.valueOf(HttpMethod.POST), "/api/items").authenticated()
+
+                        .requestMatchers("/api/items/**").authenticated()
+                        .requestMatchers("/api/panier/**").authenticated()
+                        .requestMatchers("/api/payments/**").authenticated()
+
+                        // Endpoint public (si nécessaire)
                         .requestMatchers("/Projetback/**").permitAll()
 
-
-
-
-                        .anyRequest().permitAll() // ✅ autorise toutes les requêtes
-
+                        .anyRequest().permitAll() // peut être changé en `.authenticated()` si nécessaire
                 )
                 .formLogin(form -> form
                         .loginPage("/login").permitAll()
@@ -64,18 +74,35 @@ public class SecurityConfig {
                         .loginPage("/login")
                         .successHandler(oAuth2SuccessHandler)
                 )
-                .addFilterBefore(new JwtFilter(customUserDetailsService, jwtUtils), UsernamePasswordAuthenticationFilter.class); // Ajout du filtre JWT
+                .addFilterBefore(new JwtFilter(customUserDetailsService, jwtUtils), UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
     }
 
+
     @Bean
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:4201"));
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        config.setAllowedOrigins(Arrays.asList(
+                "http://localhost:4200",
+                "http://localhost:4201",
+                "http://127.0.0.1:4200"
+        ));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "X-Requested-With",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers"
+        ));
+        config.setExposedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Disposition"
+        ));
         config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

@@ -9,6 +9,9 @@ import tn.esprit.back.Repository.Marketplace.PanierRepository;
 import tn.esprit.back.Repository.User.UserRepository;
 
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
+
 @Service
 @RequiredArgsConstructor
 public class PanierService {
@@ -23,6 +26,7 @@ public class PanierService {
                     Panier newPanier = Panier.builder()
                             .user(user)
                             .total(0.0)
+                            .items(new HashSet<>()) // Initialisation explicite
                             .build();
                     return panierRepository.save(newPanier);
                 });
@@ -31,16 +35,34 @@ public class PanierService {
     @Transactional
     public Panier addItemToPanier(int userId, Long itemId) {
         Panier panier = getOrCreatePanier(userId);
-        Item item = itemRepository.findById(itemId).orElseThrow();
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("Item not found"));
 
-        if (!item.isAvailable()) {
-            throw new RuntimeException("Cet item n'est pas disponible");
+        // Initialisation de la collection si null
+        if (panier.getItems() == null) {
+            panier.setItems(new HashSet<>());
         }
 
-        panier.addItem(item);
-        return panierRepository.save(panier);
-    }
+        // Vérifications
+        if (item.getSeller().getId() == userId) {
+            throw new RuntimeException("You cannot add your own item to cart");
+        }
 
+        if (!item.isAvailable()) {
+            throw new RuntimeException("Item is not available");
+        }
+
+        // Vérifier si l'item est déjà dans le panier
+        boolean itemExists = panier.getItems().stream()
+                .anyMatch(i -> i.getIdItem().equals(itemId));
+
+        if (!itemExists) {
+            panier.addItem(item);
+            return panierRepository.save(panier);
+        } else {
+            throw new RuntimeException("Item already in cart");
+        }
+    }
     @Transactional
     public Panier removeItemFromPanier(int userId, Long itemId) {
         Panier panier = getOrCreatePanier(userId);

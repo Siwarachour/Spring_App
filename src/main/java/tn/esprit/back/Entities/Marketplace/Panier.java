@@ -6,7 +6,6 @@ import tn.esprit.back.Entities.User.User;
 
 import java.util.HashSet;
 import java.util.Set;
-
 @Entity
 @Getter
 @Setter
@@ -27,25 +26,26 @@ public class Panier {
     @JoinTable(name = "panier_items",
             joinColumns = @JoinColumn(name = "panier_id"),
             inverseJoinColumns = @JoinColumn(name = "item_id"))
-            private Set<Item> items = new HashSet<>();
+    private Set<Item> items = new HashSet<>(); // Initialisation ici
 
+    public void calculateTotal() {
+        this.total = items.stream()
+                .mapToDouble(Item::getPrice)
+                .sum();
+    }
 
-            // Méthode pour calculer le total
-            public void calculateTotal() {
-            this.total = items.stream()
-            .mapToDouble(Item::getPrice)
-            .sum();
-            }
-
-            // Méthode pour ajouter un item
-            public void addItem(Item item) {
+    public void addItem(Item item) {
+        if (items == null) {
+            items = new HashSet<>();
+        }
         items.add(item);
         calculateTotal();
     }
 
-    // Méthode pour supprimer un item
     public void removeItem(Item item) {
-        items.remove(item);
-        calculateTotal();
+        if (items != null) {
+            items.remove(item);
+            calculateTotal();
+        }
     }
 }

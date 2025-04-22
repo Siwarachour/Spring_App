@@ -12,4 +12,5 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     List<Item> findBySellerIdAndStatus(int sellerId, ItemStatus status);
     List<Item> findByCategory(ItemCategory category);
     List<Item> findByStatusAndCategory(ItemStatus status, ItemCategory category);
+
 }
