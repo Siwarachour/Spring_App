@@ -10,6 +10,7 @@ import tn.esprit.back.Repository.User.UserRepository;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,9 +22,9 @@ public class OffreService {
     private final UserRepository userRepository;
 
     // Corrected image folder path to be outside of src/main/java
-    private final String IMAGE_FOLDER = System.getProperty("user.dir") + "/uploads/offreimg/";
+    private final String IMAGE_FOLDER = System.getProperty("user.dir") + "/uploads/offreimages/";
 
-    @CrossOrigin(origins = "http://localhost:4200", allowedHeaders = "*", allowCredentials = "true")
+    @CrossOrigin(origins = "http://localhost:4201", allowedHeaders = "*", allowCredentials = "true")
     public Long addOffre(Offre offre, MultipartFile image) {
         // Authentication check
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -33,6 +34,10 @@ public class OffreService {
 
         String username = authentication.getName();
         System.out.println("Username from JWT: " + username);
+
+        // Define the new image folder path
+        String IMAGE_FOLDER = "D:\\doc\\Bureau\\NOUVEAU\\Back\\Spring_App\\uploads\\offreimages\\";
+
 
         // Handle image saving
         if (image != null && !image.isEmpty()) {
@@ -49,7 +54,7 @@ public class OffreService {
                 image.transferTo(dest);
 
                 // Set the image path in the entity (relative path for frontend access)
-                offre.setImageUrl("uploads/offreimg/" + fileName);  // relative path for frontend
+                offre.setImageUrl("uploads/offreimages/" + fileName);  // relative path for frontend
             } catch (IOException e) {
                 throw new RuntimeException("Error saving image: " + e.getMessage());
             }
@@ -78,10 +83,15 @@ public class OffreService {
             offre.setTitle(updatedOffre.getTitle());
             offre.setSkills(updatedOffre.getSkills());
             offre.setDescription(updatedOffre.getDescription());
+
+            // Update only specific fields, not the 'createdAt' or 'updatedAt'
+            offre.setCreatedAt(LocalDateTime.now());  // If you want to update the timestamp
+
             return offreRepo.save(offre);
         }
         return null;
     }
+
 
     // Delete offer
     public boolean deleteOffre(Long id) {

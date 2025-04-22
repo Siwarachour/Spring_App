@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
 
+                        .requestMatchers("/Projetback/**").permitAll()
 
 
 

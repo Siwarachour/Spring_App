@@ -1,6 +1,4 @@
 package tn.esprit.back.Entities.Application;
-
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -33,6 +31,8 @@ public class Application {
    @JsonIgnore
    private User student;
 
+    @Column(nullable = true)
+    private String condidat;
 
     private String motivatedlettre;
 
@@ -50,7 +50,9 @@ public class Application {
 
 
     @OneToOne( optional = true)
+    @ManyToOne(optional = true)
     private Feedback feedback;
+
     @JsonGetter("studentId")  // This will be the name of the field in the JSON response
     public Integer getStudentId() {
         return student != null ? student.getId() : null;
@@ -60,9 +62,11 @@ public class Application {
         return student != null ? student.getUsername() : null;
     }
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JsonInclude(JsonInclude.Include.NON_NULL)  // Ensure it's included when not null
+    @ManyToOne
+    @JoinColumn(name = "cv_id", referencedColumnName = "id", nullable = false)
     private Cv cv;
+
+
     @JsonGetter("offreId")
     public Integer getOffreId() {
         return offre != null ? offre.getId() : null;
@@ -70,6 +74,10 @@ public class Application {
     @JsonGetter("cvid")
     public Integer getCvid() {
         return cv != null ? cv.getId() : null;
+    }
+    @JsonGetter("skills")
+    public String getSkills() {
+        return cv != null ? cv.getSkills() : null;
     }
 
     @JsonGetter("pdfDownloadLink")

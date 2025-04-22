@@ -5,6 +5,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Repository.User.UserRepository;
 
@@ -65,25 +66,27 @@ public class CvService {
     }
 
     // New method to retrieve the CV as a PDF for viewing (not downloading)
-    public ResponseEntity<InputStreamResource> getCvPdfForViewing(int cvId) throws Exception {
+    public ResponseEntity<InputStreamResource> getCvPdfForViewing(@PathVariable("cvId") int cvId) throws Exception {
         Cv cv = cvRepo.findById(cvId).orElse(null);
         if (cv == null) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.notFound().build();  // Return 404 if the CV is not found
         }
 
-        String fileName = "cv_" + cv.getId() + ".pdf";
-        String uploadDir = "C:/Users/21650/Desktop/Spring_App/src/main/java/tn/esprit/back/Entities/Cv/uploads/"; // Ensure this path is correct
+        // Dynamically construct the file name based on the cvId
+        String fileName = "uploads2cv_" + cvId + ".pdf";
+        String uploadDir = "D:/doc/Bureau/NOUVEAU/Back/Spring_App/src/main/java/tn/esprit/back/Entities/Cv";  // Adjust the base directory as necessary
         Path filePath = Paths.get(uploadDir).resolve(fileName);
         File file = filePath.toFile();
 
         if (!file.exists()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.notFound().build();  // Return 404 if the file does not exist
         }
 
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
-                .body(resource);
+                .body(resource);  // Return the PDF as the response body
     }
+
 }
