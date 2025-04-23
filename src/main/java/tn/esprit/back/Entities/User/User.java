@@ -74,8 +74,8 @@ public class User implements UserDetails, Principal {
     private Set<Application> applications;
 
     // ===================== CV =====================
-    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
-    private Cv cv;
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
+    private List<Cv> cvs = new ArrayList<>();
 
     // ===================== Projet Relations =====================
     @JsonIgnore

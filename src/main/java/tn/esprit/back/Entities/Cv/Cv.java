@@ -81,7 +81,7 @@ public class Cv {
     @Column(nullable = true)
     private String certificate;
 
-    @OneToOne
+    @ManyToOne
     @JsonIgnore
     private User student;
 

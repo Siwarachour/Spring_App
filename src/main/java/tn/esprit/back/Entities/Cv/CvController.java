@@ -34,7 +34,7 @@ public class CvController {
     public Object addCv(@RequestBody Cv cv) {  // Make sure @RequestBody is used if expecting a JSON body
         System.out.println("Received CV data: " + cv);  // Debug the incoming CV object
 
-        cv.setStudent(userRepository.findByusername("siwar23"));
+        cv.setStudent(userRepository.findByusername("siwar"));
         // Save the CV to the database
         Cv savedCv = cvRepo.save(cv);
         System.out.println("Saved CV with ID: " + savedCv.getId());  // Debug the saved CV ID
