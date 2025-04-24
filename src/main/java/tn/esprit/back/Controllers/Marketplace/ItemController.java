@@ -32,6 +32,8 @@ public class ItemController {
             @RequestParam("title") String title,
             @RequestParam("description") String description,
             @RequestParam("price") Double price,
+            @RequestParam("quantityAvailable") int quantityAvailable, // Champ manquant ajouté ici
+
             @RequestParam("category") ItemCategory category,
             @RequestParam(value = "image", required = false) MultipartFile image,
             Authentication authentication) throws IOException {
@@ -42,6 +44,8 @@ public class ItemController {
         item.setTitle(title);
         item.setDescription(description);
         item.setPrice(price);
+        item.setQuantityAvailable(quantityAvailable); // Et ici
+
         item.setCategory(category);
 
         if (image != null && !image.isEmpty()) {
@@ -74,6 +78,8 @@ public class ItemController {
             @RequestParam("title") String title,
             @RequestParam("description") String description,
             @RequestParam("price") Double price,
+            @RequestParam("quantityAvailable") int quantityAvailable, // Champ manquant ajouté ici
+
             @RequestParam("category") ItemCategory category,
             @RequestParam(value = "image", required = false) MultipartFile image,
             @RequestParam(value = "keepExistingImage", defaultValue = "false") boolean keepExistingImage,
@@ -86,6 +92,8 @@ public class ItemController {
         item.setTitle(title);
         item.setDescription(description);
         item.setPrice(price);
+        item.setQuantityAvailable(quantityAvailable); // Et ici
+
         item.setCategory(category);
 
         // Gestion de l'image

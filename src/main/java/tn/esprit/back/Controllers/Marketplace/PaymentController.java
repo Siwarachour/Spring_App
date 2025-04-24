@@ -1,17 +1,22 @@
 package tn.esprit.back.Controllers.Marketplace;
 
+import com.nimbusds.jose.shaded.gson.JsonObject;
+import com.nimbusds.jose.shaded.gson.JsonParser;
+import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.back.Entities.Marketplace.*;
+import tn.esprit.back.Entities.Marketplace.Facture;
+import tn.esprit.back.Entities.Marketplace.Paiement;
+import tn.esprit.back.Entities.Marketplace.Panier;
+import tn.esprit.back.Entities.User.User;
+import tn.esprit.back.Services.Marketplace.PanierService;
 import tn.esprit.back.Services.Marketplace.PaymentService;
 import tn.esprit.back.Services.User.CustomUserDetailsService;
 
-import java.util.List;
-import java.util.Optional;
-
+import java.util.Map;
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
@@ -19,46 +24,79 @@ public class PaymentController {
     private final PaymentService paymentService;
     private final CustomUserDetailsService userService;
 
-    @PostMapping("/checkout")
-    public ResponseEntity<Facture> checkout(Authentication authentication) {
-        int userId = userService.getConnectedUser().getId();
-        return ResponseEntity.ok(paymentService.createFactureFromPanier(userId));
+    @ExceptionHandler(StripeException.class)
+    public ResponseEntity<Map<String, String>> handleStripeException(StripeException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", e.getMessage()));
     }
 
-    @PostMapping("/pay/{factureId}")
-    public ResponseEntity<Paiement> processPayment(
-            @PathVariable Long factureId,
-            @RequestParam PaymentMethod methode,
-            @RequestParam String reference,
-            Authentication authentication) {
-        int userId = userService.getConnectedUser().getId();
-        return ResponseEntity.ok(paymentService.processPayment(factureId, methode, reference));
-    }
+    @PostMapping("/initier-paiement")
+    public ResponseEntity<?> initierPaiement(Authentication authentication) {
+        try {
+            User user = userService.getConnectedUser();
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("success", false, "message", "User not authenticated"));
+            }
 
-    @GetMapping("/my-factures")
-    public ResponseEntity<List<Facture>> getMyFactures(Authentication authentication) {
-        int userId = userService.getConnectedUser().getId();
-        return ResponseEntity.ok(paymentService.getUserFactures(userId));
-    }
-    @GetMapping("/facture/{factureId}/payment")
-    public ResponseEntity<Paiement> getPaymentByFacture(
-            @PathVariable Long factureId,
-            Authentication authentication) {
+            Map<String, String> paymentInfo = paymentService.initierPaiement(user.getId());
+            return ResponseEntity.ok(paymentInfo);
 
-        int userId = userService.getConnectedUser().getId();
-
-        Optional<Paiement> optionalPaiement = paymentService.getPaymentByFacture(factureId);
-
-        if (optionalPaiement.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        } catch (StripeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "Stripe error: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Error: " + e.getMessage()));
         }
+    }
 
-        Paiement paiement = optionalPaiement.get();
+    @PostMapping("/confirmer-paiement/{paymentIntentId}")
+    public ResponseEntity<?> confirmerPaiement(
+            @PathVariable String paymentIntentId,
+            Authentication authentication) {
+        try {
+            // Verify authentication
+            User user = userService.getConnectedUser();
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("success", false, "message", "User not authenticated"));
+            }
 
-        if (paiement.getFacture().getClient().getId() != userId) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            Facture facture = paymentService.confirmerPaiementReussi(paymentIntentId);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "facture", facture,
+                    "receiptUrl", facture.getPaymentReceiptUrl()
+            ));
+        } catch (StripeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("success", false, "message", "Stripe error: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Error: " + e.getMessage()));
         }
+    }
 
-        return ResponseEntity.ok(paiement);
+//    @PostMapping("/webhook")
+//    public ResponseEntity<Void> handleWebhook(
+//            @RequestBody String payload,
+//            @RequestHeader("Stripe-Signature") String sigHeader) {
+//        try {
+//            // Validation de la signature Stripe (à implémenter)
+//            String paymentIntentId = extractPaymentIntentId(payload);
+//            paymentService.handlePaymentWebhook(paymentIntentId);
+//            return ResponseEntity.ok().build();
+//        } catch (Exception e) {
+//            return ResponseEntity.badRequest().build();
+//        }
+//    }
+
+    private String extractPaymentIntentId(String payload) {
+        // Implémentation basique - à améliorer
+        JsonObject jsonObject = JsonParser.parseString(payload).getAsJsonObject();
+        JsonObject dataObject = jsonObject.getAsJsonObject("data");
+        JsonObject paymentIntentObject = dataObject.getAsJsonObject("object");
+        return paymentIntentObject.get("id").getAsString();
     }
 }

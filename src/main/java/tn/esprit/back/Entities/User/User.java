@@ -40,6 +40,16 @@ public class User implements UserDetails, Principal {
     private String firstName;
     private String lastName;
 
+    public String getStripeCustomerId() {
+        return stripeCustomerId;
+    }
+
+    public void setStripeCustomerId(String stripeCustomerId) {
+        this.stripeCustomerId = stripeCustomerId;
+    }
+
+    // In your User entity class
+    private String stripeCustomerId; // Add getter and setter
     @Column(unique = true)
     private String email;
 

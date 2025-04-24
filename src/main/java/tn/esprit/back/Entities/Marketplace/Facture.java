@@ -32,15 +32,66 @@ public class Facture {
 
     private double montantTotal;
     private Date dateCreation;
-    private boolean payee = false;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus status = PaymentStatus.PENDING;
+
+    // Stripe-specific fields
+    private String stripePaymentIntentId;
+    private String stripeClientSecret;
+    private String stripeCurrency = "eur"; // Par défaut en euros
+
+    // Méthode de paiement (peut être null avant paiement)
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
+
+    private Date datePaiement;
+    private String paymentReceiptUrl;
+
+    public enum PaymentStatus {
+        PENDING,    // En attente de paiement
+        SUCCEEDED,  // Paiement réussi
+        FAILED,     // Paiement échoué
+        CANCELED    // Paiement annulé
+    }
 
     // Méthode pour générer une facture à partir d'un panier
     public static Facture fromPanier(Panier panier) {
-        Facture facture = new Facture();
-        facture.setClient(panier.getUser());
-        facture.setItems(new HashSet<>(panier.getItems()));
-        facture.setMontantTotal(panier.getTotal());
-        facture.setDateCreation(new Date());
-        return facture;
+        if (panier == null) {
+            throw new IllegalArgumentException("Panier ne peut pas être null");
+        }
+        if (panier.getUser() == null) {
+            throw new IllegalArgumentException("Le panier doit avoir un utilisateur");
+        }
+        if (panier.getItems() == null) {
+            throw new IllegalArgumentException("Les items du panier ne peuvent pas être null");
+        }
+
+        // Vérifiez que le calcul du total est correct
+        double total = panier.getItems().stream()
+                .mapToDouble(Item::getPrice)
+                .sum();
+
+        return Facture.builder()
+                .client(panier.getUser())
+                .items(new HashSet<>(panier.getItems())) // Copie défensive
+                .montantTotal(total)
+                .dateCreation(new Date())
+                .status(PaymentStatus.PENDING)
+                .stripeCurrency("eur") // Défaut EUR
+                .build();
+    }
+
+    // Méthode pour marquer la facture comme payée
+    public void markAsPaid(String paymentIntentId, PaymentMethod method) {
+        this.status = PaymentStatus.SUCCEEDED;
+        this.stripePaymentIntentId = paymentIntentId;
+        this.paymentMethod = method;
+        this.datePaiement = new Date();
+    }
+
+    // Méthode pour vérifier si la facture est payée
+    public boolean isPayee() {
+        return this.status == PaymentStatus.SUCCEEDED;
     }
 }

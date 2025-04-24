@@ -1,5 +1,6 @@
 package tn.esprit.back.Services.Marketplace;
 
+import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.back.Entities.Marketplace.*;
@@ -18,6 +19,7 @@ public class PanierService {
     private final PanierRepository panierRepository;
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final PaymentService paymentService;
 
     public Panier getOrCreatePanier(int userId) {
         return panierRepository.findByUserId(userId)
@@ -26,11 +28,12 @@ public class PanierService {
                     Panier newPanier = Panier.builder()
                             .user(user)
                             .total(0.0)
-                            .items(new HashSet<>()) // Initialisation explicite
+                            .items(new HashSet<>())
                             .build();
                     return panierRepository.save(newPanier);
                 });
     }
+
 
     @Transactional
     public Panier addItemToPanier(int userId, Long itemId) {
@@ -38,12 +41,10 @@ public class PanierService {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Item not found"));
 
-        // Initialisation de la collection si null
         if (panier.getItems() == null) {
             panier.setItems(new HashSet<>());
         }
 
-        // Vérifications
         if (item.getSeller().getId() == userId) {
             throw new RuntimeException("You cannot add your own item to cart");
         }
@@ -52,7 +53,6 @@ public class PanierService {
             throw new RuntimeException("Item is not available");
         }
 
-        // Vérifier si l'item est déjà dans le panier
         boolean itemExists = panier.getItems().stream()
                 .anyMatch(i -> i.getIdItem().equals(itemId));
 
@@ -63,11 +63,11 @@ public class PanierService {
             throw new RuntimeException("Item already in cart");
         }
     }
+
     @Transactional
     public Panier removeItemFromPanier(int userId, Long itemId) {
         Panier panier = getOrCreatePanier(userId);
         Item item = itemRepository.findById(itemId).orElseThrow();
-
         panier.removeItem(item);
         return panierRepository.save(panier);
     }
@@ -83,4 +83,5 @@ public class PanierService {
         panier.setTotal(0.0);
         panierRepository.save(panier);
     }
+
 }
