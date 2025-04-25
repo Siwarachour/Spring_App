@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.back.Entities.Event.Reservation;
+import tn.esprit.back.Services.Event.EventEmailService;
 import tn.esprit.back.Services.Event.IReservationService;
 import tn.esprit.back.Services.Event.PdfGenerationService;
 
@@ -26,6 +27,8 @@ public class ReservationController {
 
     @Autowired
     private IReservationService reservationService;
+    @Autowired
+    private EventEmailService eventEmailService;
 
     @PostMapping
     public ResponseEntity<?> createReservation(
@@ -39,12 +42,12 @@ public class ReservationController {
         }
     }
 
-    @GetMapping("/event/{eventId}")
+   /* @GetMapping("/event/{eventId}")
     public ResponseEntity<List<Reservation>> getReservationsByEvent(@PathVariable Long eventId) {
         List<Reservation> reservations = reservationService.findByEventId(eventId);
         System.out.println("Found " + reservations.size() + " reservations for event " + eventId);
         return ResponseEntity.ok(reservations);
-    }
+    }*/
 
     @GetMapping("/{id}")
     public ResponseEntity<Reservation> getReservationById(@PathVariable Long id) {
@@ -122,6 +125,19 @@ public class ReservationController {
             }
 
             Reservation createdReservation = reservationService.createReservationWithPayment(reservation);
+
+            // Send appropriate email based on payment method
+            try {
+                if ("card".equals(createdReservation.getPaymentMethod())) {
+                    eventEmailService.sendReservationConfirmation(createdReservation);
+                } else {
+                    eventEmailService.sendReservationConfirmation(createdReservation);
+                }
+            } catch (Exception e) {
+                //log.error("Failed to send confirmation email for reservation {}", createdReservation.getIdReservation(), e);
+                // Continue even if email fails - don't fail the whole operation
+            }
+
             return ResponseEntity.ok(createdReservation);
 
         } catch (RuntimeException e) {
@@ -141,5 +157,19 @@ public class ReservationController {
         headers.setContentDispositionFormData("attachment", "reservation_" + id + ".pdf");
 
         return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+    }
+    @GetMapping("/event/{eventId}")
+    public ResponseEntity<?> getReservationsByEvent(@PathVariable Long eventId) {
+        try {
+            List<Reservation> reservations = reservationService.findByEventId(eventId);
+            return ResponseEntity.ok(reservations);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                            "error", "Failed to fetch reservations",
+                            "message", e.getMessage(),
+                            "details", e.getCause() != null ? e.getCause().getMessage() : "No additional details"
+                    ));
+        }
     }
 }

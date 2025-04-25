@@ -2,6 +2,7 @@ package tn.esprit.back.Entities.Event;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
@@ -9,14 +10,20 @@ import lombok.AllArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude = "reservation")
+
 public class PaymentDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
     private String cardNumber;
+
     private String expiryDate;
+
     private String cvv;
+
 
     @OneToOne(mappedBy = "paymentDetails")
     @JsonIgnore

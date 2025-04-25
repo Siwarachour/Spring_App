@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import tn.esprit.back.Entities.User.User;
 
@@ -14,6 +15,8 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude = "paymentDetails")
+
 public class Reservation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,6 +34,7 @@ public class Reservation {
     @JoinColumn(name = "event_id")
     @JsonIgnoreProperties({"reviews", "reservations", "sponsors"})
     private Event event;
+
     private String paymentMethod;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)

@@ -1,6 +1,7 @@
 package tn.esprit.back.Services.Event;
 
 
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tn.esprit.back.Entities.Event.Event;
@@ -162,6 +163,7 @@ public class ReservationServiceImplement implements IReservationService {
         return savedReservation;
 
     }
+
     public Reservation getReservationForQRCode(Long id) {
         return reservationRepository.findByIdWithEvent(id)
                 .orElseThrow(() -> new RuntimeException("Réservation non trouvée"));

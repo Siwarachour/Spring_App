@@ -40,24 +40,13 @@ public class Event {
     private Set<Sponsor> sponsors = new HashSet<>();
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore // ou @JsonBackReference si tu veux garder la relation
     private Set<Reservation> reservations = new HashSet<>();
 
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Review> reviews = new HashSet<>();
 
-    @ManyToOne
-    @JoinColumn(name = "creator_id") // nom de la colonne FK dans la table event
-    @JsonIgnoreProperties("events")
-    private User creator;
-
-    public User getCreator() {
-        return creator;
-    }
-
-    public void setCreator(User creator) {
-        this.creator = creator;
-    }
 
     public Long getIdEvent() {
         return idEvent;

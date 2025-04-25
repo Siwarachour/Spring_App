@@ -61,8 +61,7 @@ public class EventServiceImplement implements IEventService{
 
     @Override
     public List<Event> retriveAllEvents() {
-        return new ArrayList<>(); // à la place de eventRepository.findAll();
-
+        return eventRepository.findAll();
     }
 
     @Override

@@ -24,6 +24,12 @@ public interface EventRepository extends JpaRepository<Event,Long> {
 
     @Query("SELECT e.reservations FROM Event e WHERE e.idEvent = :eventId")
     List<Reservation> findReservationsByEventId(Long eventId);
+    @Query("SELECT e FROM Event e LEFT JOIN FETCH e.reservations WHERE e.idEvent = :id")
+    Optional<Event> findByIdWithDetails(@Param("id") Long id);
+
+
+    @EntityGraph(attributePaths = {"sponsors", "reservations"})
+    List<Event> findAll();
 
 
 }

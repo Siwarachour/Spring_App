@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/Event")
@@ -145,11 +144,23 @@ public class EventController {
 
         return EventService.addEvent(event);
     }
-    @GetMapping("/retriveAllEventsWithSponsors")
+    /*@GetMapping("/retriveAllEventsWithSponsors")
     public ResponseEntity<List<Event>> getAllEventsWithSponsors() {
         List<Event> events = eventRepository.findAllWithSponsors();
         return ResponseEntity.ok(events);
+    }*/
+    @GetMapping("/retriveAllEventsWithSponsors")
+    public ResponseEntity<?> getAllEventsWithSponsors() {
+        try {
+            List<Event> events = eventRepository.findAllWithSponsors(); // JOIN FETCH possible
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            e.printStackTrace(); // 🔍 À regarder dans la console !
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erreur serveur: " + e.getMessage());
+        }
     }
+
     @PutMapping(value = "/updateEventWithImageAndSponsors/{idEvent}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Event> updateEventWithImageAndSponsors(
             @PathVariable Long idEvent,
