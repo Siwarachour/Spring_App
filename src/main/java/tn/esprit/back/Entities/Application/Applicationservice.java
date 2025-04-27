@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import tn.esprit.back.Entities.Cv.Cv;
 import tn.esprit.back.Entities.Feedback.Feedback;
 import tn.esprit.back.Entities.Feedback.FeedbackRepository;
 import tn.esprit.back.Entities.User.User;
@@ -22,11 +23,16 @@ public class Applicationservice {
     public Object addApplication(Application application, Authentication connectedUser) {
 
         // Retrieve the user based on the username
-        User user = userRepository.findByusername("siwar23");
+        User user = userRepository.findByusername("siwar");
         if (user != null) {
             // Set the student (user) and their CV to the application
-            application.setStudent(user);
-            application.setCv(user.getCv());
+            if (!user.getCvs().isEmpty()) {
+                Cv latestCv = user.getCvs().get(user.getCvs().size() - 1); // last added CV
+                application.setCv(latestCv);
+            } else {
+                throw new RuntimeException("User has no CVs.");
+            }
+
 
             // Automatically assign Feedback with id = 2
             Feedback feedback = feedbackRepository.findById(2)
