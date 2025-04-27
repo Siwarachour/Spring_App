@@ -60,7 +60,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/items/**").authenticated()
                         .requestMatchers("/api/panier/**").authenticated()
-                        .requestMatchers("/api/payments/**").authenticated()
+                        .requestMatchers("/api/payment/**").authenticated()
 
                         // Endpoint public (si nécessaire)
                         .requestMatchers("/Projetback/**").permitAll()
@@ -83,26 +83,10 @@ public class SecurityConfig {
     @Bean
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(Arrays.asList(
-                "http://localhost:4200",
-                "http://localhost:4201",
-                "http://127.0.0.1:4200"
-        ));
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Type",
-                "Accept",
-                "X-Requested-With",
-                "Access-Control-Request-Method",
-                "Access-Control-Request-Headers"
-        ));
-        config.setExposedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Disposition"
-        ));
+        config.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:4201"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         config.setAllowCredentials(true);
-        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

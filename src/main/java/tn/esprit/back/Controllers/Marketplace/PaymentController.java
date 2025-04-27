@@ -16,7 +16,10 @@ import tn.esprit.back.Services.Marketplace.PanierService;
 import tn.esprit.back.Services.Marketplace.PaymentService;
 import tn.esprit.back.Services.User.CustomUserDetailsService;
 
+import java.util.List;
 import java.util.Map;
+@CrossOrigin(origins = "http://localhost:4200")
+
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
@@ -33,10 +36,15 @@ public class PaymentController {
     @PostMapping("/initier-paiement")
     public ResponseEntity<?> initierPaiement(Authentication authentication) {
         try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("success", false, "message", "Authentication required"));
+            }
+
             User user = userService.getConnectedUser();
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("success", false, "message", "User not authenticated"));
+                        .body(Map.of("success", false, "message", "User not found"));
             }
 
             Map<String, String> paymentInfo = paymentService.initierPaiement(user.getId());
@@ -72,6 +80,39 @@ public class PaymentController {
         } catch (StripeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("success", false, "message", "Stripe error: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Error: " + e.getMessage()));
+        }
+    }
+    @GetMapping("/mes-paiements")
+    public ResponseEntity<?> getPaiementsUtilisateur(Authentication authentication) {
+        try {
+            User user = userService.getConnectedUser();
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("success", false, "message", "User not authenticated"));
+            }
+
+            List<Paiement> paiements = paymentService.getPaiementsByUserId(user.getId());
+            return ResponseEntity.ok(paiements);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Error: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/mes-factures")
+    public ResponseEntity<?> getFacturesUtilisateur(Authentication authentication) {
+        try {
+            User user = userService.getConnectedUser();
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("success", false, "message", "User not authenticated"));
+            }
+
+            List<Facture> factures = paymentService.getFacturesByUserId(user.getId());
+            return ResponseEntity.ok(factures);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("success", false, "message", "Error: " + e.getMessage()));

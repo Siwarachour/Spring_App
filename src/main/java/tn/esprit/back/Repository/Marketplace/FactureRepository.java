@@ -10,5 +10,6 @@ public interface FactureRepository  extends JpaRepository<Facture, Long> {
     List<Facture> findByClientId(int clientId);
     Optional<Facture> findByStripePaymentIntentId(String stripePaymentIntentId);
     boolean existsByStripePaymentIntentId(String stripePaymentIntentId);
+    List<Facture> findAllByClientId(int clientId);
 
 }

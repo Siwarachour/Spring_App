@@ -165,6 +165,15 @@ public class PaymentService {
         paiementRepository.save(paiement);
     }
 
+    @Transactional(readOnly = true)
+    public List<Paiement> getPaiementsByUserId(int userId) {
+        return paiementRepository.findAllByFactureClientId(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Facture> getFacturesByUserId(int userId) {
+        return factureRepository.findAllByClientId(userId);
+    }
     private void clearCart(Panier panier) {
         panier.getItems().clear();
         panier.setTotal(0.0);
