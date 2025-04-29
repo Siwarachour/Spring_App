@@ -184,4 +184,15 @@ public class PaymentService {
         panier.setTotal(0.0);
         panierRepository.save(panier);
     }
+    @Transactional
+    public void deleteFacture(Long factureId) {
+        Facture facture = factureRepository.findById(factureId)
+                .orElseThrow(() -> new RuntimeException("Facture not found"));
+
+        // Supprimez d'abord le paiement associé s'il existe
+        paiementRepository.findByFacture_IdFacture(factureId).ifPresent(paiementRepository::delete);
+
+        // Puis supprimez la facture
+        factureRepository.delete(facture);
+    }
 }

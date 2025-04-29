@@ -165,6 +165,23 @@ public ResponseEntity<?> getAllFacturesAdmin(Authentication authentication) {
                 .body(Map.of("success", false, "message", "Error: " + e.getMessage()));
     }
 }
+
+    @DeleteMapping("/admin/factures/{factureId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteFacture(
+            @PathVariable Long factureId,
+            Authentication authentication) {
+        try {
+            paymentService.deleteFacture(factureId);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Facture deleted successfully"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Error: " + e.getMessage()));
+        }
+    }
     private String extractPaymentIntentId(String payload) {
         // Implémentation basique - à améliorer
         JsonObject jsonObject = JsonParser.parseString(payload).getAsJsonObject();
