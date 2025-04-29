@@ -188,10 +188,10 @@ public class DocumentController {
         return documentService.addDocumentWithUser(document, userId);
     }
 
-    @PutMapping("/affectReview/{idDocument}/{idReview}")
+   /* @PutMapping("/affectReview/{idDocument}/{idReview}")
     public Document affectReviewToDocument(@PathVariable Long idDocument, @PathVariable Long idReview) {
         return documentService.assignReviewToDocument(idDocument, idReview);
-    }
+    }*/
 
     @PutMapping("/affectCategory/{idDocument}/{idCategory}")
     public Document affectCategoryToDocument(@PathVariable Long idDocument, @PathVariable Long idCategory) {

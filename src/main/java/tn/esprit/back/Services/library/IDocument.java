@@ -14,7 +14,7 @@ public interface IDocument {
 
     Document addDocumentWithUser(Document document, Long userId);
 
-    Document assignReviewToDocument(Long documentId, Long reviewId);
+//Document assignReviewToDocument(Long documentId, Long reviewId);
 
     Document addDocumentToCategory(Long documentId, Long categoryId);
 

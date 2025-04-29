@@ -6,11 +6,9 @@ import tn.esprit.back.Entities.User.User;
 import tn.esprit.back.Entities.library.Category;
 import tn.esprit.back.Entities.library.Document;
 import tn.esprit.back.Entities.library.DocumentStatus;
-import tn.esprit.back.Entities.library.Review;
 import tn.esprit.back.Repository.User.UserRepository;
 import tn.esprit.back.Repository.library.CategoryRepository;
 import tn.esprit.back.Repository.library.DocumentRepository;
-import tn.esprit.back.Repository.library.ReviewRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,8 +18,7 @@ public class DocumentService implements IDocument {
 
     @Autowired
     DocumentRepository documentRepository;
-    @Autowired
-    ReviewRepository reviewRepository;
+
     @Autowired
     CategoryRepository categoryRepository;
     @Autowired
@@ -66,7 +63,7 @@ public class DocumentService implements IDocument {
         document.setStudent(user);
         return documentRepository.save(document);
     }
-    @Override
+    /*@Override
     public Document assignReviewToDocument(Long documentId, Long reviewId) {
         Document document = documentRepository.findById(documentId).orElseThrow();
         Review review = reviewRepository.findById(reviewId).orElseThrow();
@@ -74,7 +71,7 @@ public class DocumentService implements IDocument {
         review.setDocument(document);
         reviewRepository.save(review);
         return documentRepository.save(document);
-    }
+    }*/
     @Override
     public Document addDocumentToCategory(Long documentId, Long categoryId) {
         Document document = documentRepository.findById(documentId).orElseThrow();

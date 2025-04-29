@@ -15,7 +15,6 @@ import tn.esprit.back.Entities.Role.Role;
 import tn.esprit.back.Entities.coursCertificat.Cours;
 import tn.esprit.back.Entities.library.Department;
 import tn.esprit.back.Entities.library.Document;
-import tn.esprit.back.Entities.library.Review;
 
 import javax.security.auth.Subject;
 import java.security.Principal;
@@ -107,9 +106,7 @@ public class User implements UserDetails, Principal {
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
     private List<Document> documents = new ArrayList<>();
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "reviewer")
-    private List<Review> reviews = new ArrayList<>();
+
 
     // ===================== UserDetails =====================
     @Override

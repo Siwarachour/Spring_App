@@ -29,8 +29,7 @@ public class Document {
     @ManyToOne
     private User student;
 
-    @OneToOne(mappedBy = "document", cascade = CascadeType.ALL)
-    private Review review;
+
 
     @ManyToMany
     private List<Category> categories = new ArrayList<>();

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Ticket - ' + ${eventName}">Your Ticket</title>
+    <style>
+        /* Base Styles */
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f7fafc;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Email Container */
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background-color: #4f46e5;
+            color: white;
+            padding: 25px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        /* Ticket Card */
+        .ticket-card {
+            background: white;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        /* Event Image */
+        .event-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        /* Ticket Content */
+        .ticket-content {
+            padding: 25px;
+        }
+
+        /* Detail Sections */
+        .detail-section {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .detail-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        /* Detail Items */
+        .detail-item {
+            display: flex;
+            margin-bottom: 12px;
+        }
+
+        .detail-icon {
+            width: 24px;
+            color: #4f46e5;
+            margin-right: 12px;
+            text-align: center;
+        }
+
+        .detail-label {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 4px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            color: #111827;
+            font-weight: 600;
+        }
+
+        /* Date Formatting */
+        .date-time {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .date-part {
+            font-weight: 600;
+        }
+
+        .time-part {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        /* QR Code Section */
+        .qr-section {
+            text-align: center;
+            margin: 25px 0;
+            padding: 20px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .qr-code {
+            width: 150px;
+            height: 150px;
+            margin: 15px auto;
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            background: white;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #6b7280;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .footer a {
+            color: #4f46e5;
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media only screen and (max-width: 600px) {
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .ticket-content {
+                padding: 15px;
+            }
+
+            .qr-code {
+                width: 120px;
+                height: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <!-- Header -->
+    <div class="header">
+        <h1 th:text="'Your Reservation for ' + ${eventName}">Your Ticket</h1>
+    </div>
+
+    <!-- Ticket Card -->
+    <div class="ticket-card">
+        <!-- Event Image (optional) -->
+        <img th:if="${eventImageUrl}" th:src="${eventImageUrl}" alt="Event image" class="event-image" onerror="this.style.display='none'">
+
+        <div class="ticket-content">
+            <!-- Event Details -->
+            <div class="detail-section">
+                <div class="detail-item">
+                    <div class="detail-icon">🎭</div>
+                    <div>
+                        <div class="detail-label">EVENT</div>
+                        <div class="detail-value" th:text="${eventName}"></div>
+                    </div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-icon">📅</div>
+                    <div class="date-time">
+                        <div class="detail-label">DATE & TIME</div>
+                        <div class="detail-value" th:text="${eventDate}"></div>
+                    </div>
+                </div>
+
+
+                <div class="detail-item" th:if="${location}">
+                    <div class="detail-icon">📍</div>
+                    <div>
+                        <div class="detail-label">LOCATION</div>
+                        <div class="detail-value" th:text="${location}"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Client Details -->
+            <div class="detail-section" th:if="${clientName}">
+                <div class="detail-item">
+                    <div class="detail-icon">👤</div>
+                    <div>
+                        <div class="detail-label">RESERVATION FOR</div>
+                        <div class="detail-value" th:text="${clientName}"></div>
+                    </div>
+                </div>
+
+                <!--<div class="detail-item">
+                    <div class="detail-icon">🎫</div>
+                    <div>
+                        <div class="detail-label">BOOKING NUMBER</div>
+                        <div class="detail-value" th:text="${reservationId}"></div>
+                    </div>
+                </div>-->
+
+                <div class="detail-item">
+                    <div class="detail-icon">💺</div>
+                    <div>
+                        <div class="detail-label">SEATS</div>
+                        <div class="detail-value" th:text="${seats}"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Code
+            <div class="qr-section">
+                <div class="detail-label">PRESENT THIS QR CODE AT ENTRY</div>
+                <img th:src="${qrCodeImageUrl}" alt="QR Code" class="qr-code">
+                <div class="detail-value" th:text="${reservationId}"></div>
+            </div>-->
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>Thank you for your booking!</p>
+        <p>For any questions, please contact us at <a href="mailto:contact@yourevent.com">WorkMatecom</a></p>
+        <p style="margin-top: 15px; font-size: 12px;">
+            <em>Please present this ticket (printed or digital) at the entrance.</em>
+        </p>
+    </div>
+</div>
+</body>
+</html>
