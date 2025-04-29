@@ -37,6 +37,7 @@ import tn.esprit.back.Services.User.RoleService;
 import tn.esprit.back.Services.User.UserService;
 import tn.esprit.back.configurations.CaptchaService;
 import tn.esprit.back.configurations.JwtUtils;
+import tn.esprit.back.configurations.MailConfig;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -66,7 +67,13 @@ public class AuthController {
     private final JwtUtils jwtUtils;
 
     @Autowired
+    private MailConfig mailConfig;
+
+    @Autowired
     private final JavaMailSender mailSender;
+
+
+
 
     private final UserRepository userRepository;
    private  final CaptchaService captchaService;
@@ -638,6 +645,10 @@ public class AuthController {
 
         // Save the user to the database
         userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        mailConfig.sendAccountCreationEmail(user, mailSender);
+
+
 
         response.put("message", "User added successfully!");
         return ResponseEntity.ok(response);

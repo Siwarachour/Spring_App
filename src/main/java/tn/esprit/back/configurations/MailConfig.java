@@ -2,10 +2,13 @@ package tn.esprit.back.configurations;
 
 
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import tn.esprit.back.Entities.User.User;
 
 import java.util.Properties;
 
@@ -27,4 +30,16 @@ public class MailConfig {
 
         return mailSender;
     }
+
+    public void sendAccountCreationEmail(User user, JavaMailSender javaMailSender) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(user.getEmail());
+        message.setSubject("Bienvenue sur notre plateforme WorkMate !");
+        message.setText("Bonjour " + user.getFirstName() + ",\n\nVotre compte a été créé avec succès.\n\nIdentifiant : " + user.getUsername());
+
+        javaMailSender.send(message);
+    }
+
+
+
 }
