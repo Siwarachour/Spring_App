@@ -3,11 +3,13 @@ package tn.esprit.back.Controllers.Marketplace;
 import com.nimbusds.jose.util.Resource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import tn.esprit.back.Entities.Marketplace.*;
 import tn.esprit.back.Services.Marketplace.ItemService;
 import tn.esprit.back.Services.User.CustomUserDetailsService;
@@ -32,11 +34,18 @@ public class ItemController {
             @RequestParam("title") String title,
             @RequestParam("description") String description,
             @RequestParam("price") Double price,
-            @RequestParam("quantityAvailable") int quantityAvailable, // Champ manquant ajouté ici
-
-            @RequestParam("category") ItemCategory category,
+            @RequestParam("quantityAvailable") int quantityAvailable,
+            @RequestParam("category") String categoryStr, // Receive as String
             @RequestParam(value = "image", required = false) MultipartFile image,
             Authentication authentication) throws IOException {
+
+        // Convert String to enum safely
+        ItemCategory category;
+        try {
+            category = ItemCategory.valueOf(categoryStr);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid category value");
+        }
 
         int userId = userService.getConnectedUser().getId();
 

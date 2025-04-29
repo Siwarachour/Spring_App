@@ -25,6 +25,8 @@ public class Item {
 
     private String imageType; // Type MIME de l'image (ex: "image/jpeg")
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)  // Matches the VARCHAR(20) in database
+
     private ItemCategory category;
 
     @Enumerated(EnumType.STRING)

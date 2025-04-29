@@ -1,9 +1,9 @@
 package tn.esprit.back.Entities.Marketplace;
 
 public enum ItemCategory {
-    LIVRE,
-    MATERIEL_SCOLAIRE,
-    LOGICIEL_EDUCATIF,
-    COURS_EN_LIGNE,
-    AUTRE
+    BOOK,
+    SCHOOL_SUPPLIES,
+    EDUCATIONAL_SOFTWARE,
+    ONLINE_COURSE,
+    OTHER
 }
