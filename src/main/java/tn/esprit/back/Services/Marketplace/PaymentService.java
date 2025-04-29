@@ -174,6 +174,11 @@ public class PaymentService {
     public List<Facture> getFacturesByUserId(int userId) {
         return factureRepository.findAllByClientId(userId);
     }
+
+    @Transactional(readOnly = true)
+    public List<Facture> getAllFactures() {
+        return factureRepository.findAllByOrderByDateCreationDesc();
+    }
     private void clearCart(Panier panier) {
         panier.getItems().clear();
         panier.setTotal(0.0);

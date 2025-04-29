@@ -6,6 +6,7 @@ import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.back.Entities.Marketplace.Facture;
@@ -16,8 +17,11 @@ import tn.esprit.back.Services.Marketplace.PanierService;
 import tn.esprit.back.Services.Marketplace.PaymentService;
 import tn.esprit.back.Services.User.CustomUserDetailsService;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 @CrossOrigin(origins = "http://localhost:4200")
 
 @RestController
@@ -132,7 +136,35 @@ public class PaymentController {
 //            return ResponseEntity.badRequest().build();
 //        }
 //    }
+@GetMapping("/admin/factures")
+@PreAuthorize("hasRole('ADMIN')")
+public ResponseEntity<?> getAllFacturesAdmin(Authentication authentication) {
+    try {
+        List<Facture> factures = paymentService.getAllFactures();
 
+        // Transformer les factures en une liste de Maps contenant seulement les informations nécessaires
+        List<Map<String, Object>> simplifiedFactures = factures.stream()
+                .map(facture -> {
+                    Map<String, Object> factureMap = new HashMap<>();
+                    factureMap.put("idFacture", facture.getIdFacture());
+                    factureMap.put("clientEmail", facture.getClient().getEmail()); // Seulement l'email du client
+                    factureMap.put("items", facture.getItems());
+                    factureMap.put("montantTotal", facture.getMontantTotal());
+                    factureMap.put("dateCreation", facture.getDateCreation());
+                    factureMap.put("status", facture.getStatus());
+                    factureMap.put("paymentMethod", facture.getPaymentMethod());
+                    factureMap.put("datePaiement", facture.getDatePaiement());
+                    factureMap.put("paymentReceiptUrl", facture.getPaymentReceiptUrl());
+                    return factureMap;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(simplifiedFactures);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("success", false, "message", "Error: " + e.getMessage()));
+    }
+}
     private String extractPaymentIntentId(String payload) {
         // Implémentation basique - à améliorer
         JsonObject jsonObject = JsonParser.parseString(payload).getAsJsonObject();
