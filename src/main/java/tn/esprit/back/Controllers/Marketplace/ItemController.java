@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import tn.esprit.back.Entities.Marketplace.*;
+import tn.esprit.back.Repository.Marketplace.ItemRepository;
 import tn.esprit.back.Services.Marketplace.ItemService;
 import tn.esprit.back.Services.User.CustomUserDetailsService;
 
@@ -28,7 +29,7 @@ import java.util.List;
 public class ItemController {
     private final ItemService itemService;
     private final CustomUserDetailsService userService;
-
+private  final ItemRepository itemRepository;
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Item> addItem(
             @RequestParam("title") String title,
@@ -87,31 +88,29 @@ public class ItemController {
             @RequestParam("title") String title,
             @RequestParam("description") String description,
             @RequestParam("price") Double price,
-            @RequestParam("quantityAvailable") int quantityAvailable, // Champ manquant ajouté ici
-
+            @RequestParam("quantityAvailable") int quantityAvailable,
             @RequestParam("category") ItemCategory category,
             @RequestParam(value = "image", required = false) MultipartFile image,
             @RequestParam(value = "keepExistingImage", defaultValue = "false") boolean keepExistingImage,
             Authentication authentication) throws IOException {
 
         int userId = userService.getConnectedUser().getId();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         Item item = new Item();
         item.setIdItem(id);
         item.setTitle(title);
         item.setDescription(description);
         item.setPrice(price);
-        item.setQuantityAvailable(quantityAvailable); // Et ici
-
+        item.setQuantityAvailable(quantityAvailable);
         item.setCategory(category);
 
         // Gestion de l'image
         if (image != null && !image.isEmpty()) {
-            // Convertir l'image en Base64
             item.setImageData(Base64.getEncoder().encodeToString(image.getBytes()));
             item.setImageType(image.getContentType());
         } else if (keepExistingImage) {
-            // Garder l'image existante
             Item existingItem = itemService.getItemById(id);
             if (existingItem != null) {
                 item.setImageData(existingItem.getImageData());
@@ -119,16 +118,18 @@ public class ItemController {
             }
         }
 
-        return ResponseEntity.ok(itemService.updateItem(item, userId));
+        return ResponseEntity.ok(itemService.updateItem(item, userId, isAdmin));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteItem(@PathVariable Long id, Authentication authentication) {
         int userId = userService.getConnectedUser().getId();
-        itemService.deleteItem(id, userId);
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        itemService.deleteItem(id, userId, isAdmin);
         return ResponseEntity.noContent().build();
     }
-
     @GetMapping("/my-items")
     public ResponseEntity<List<Item>> getMyItems(Authentication authentication) {
         // Log pour débogage
@@ -164,7 +165,15 @@ public class ItemController {
         }
         return ResponseEntity.ok(itemService.getPendingItems());
     }
-
+    @GetMapping("/admin/all")
+    public ResponseEntity<List<Item>> getAllItems(Authentication authentication) {
+        // Vérifier si l'utilisateur est admin
+        if (authentication.getAuthorities().stream()
+                .noneMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return ResponseEntity.ok(itemService.getAllItems());
+    }
     @PostMapping("/{id}/approve")
     public ResponseEntity<Item> approveItem(@PathVariable Long id, Authentication authentication) {
         // Vérifier si l'utilisateur est admin

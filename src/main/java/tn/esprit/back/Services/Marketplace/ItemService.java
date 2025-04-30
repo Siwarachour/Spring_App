@@ -15,8 +15,9 @@ public class ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
 
-    // Add this method to get an item by ID
-    public Item getItemById(Long id) {
+    public List<Item> getAllItems() {
+        return itemRepository.findAll();
+    }    public Item getItemById(Long id) {
         return itemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Item not found with id: " + id));
     }
@@ -28,11 +29,13 @@ public class ItemService {
         return itemRepository.save(item);
     }
 
-    public Item updateItem(Item item, int userId) {
+
+    public Item updateItem(Item item, int userId, boolean isAdmin) {
         Item existingItem = itemRepository.findById(item.getIdItem())
                 .orElseThrow(() -> new RuntimeException("Item not found"));
 
-        if (existingItem.getSeller().getId() != userId) {
+        // Autoriser la modification si l'utilisateur est le vendeur OU un admin
+        if (existingItem.getSeller().getId() != userId && !isAdmin) {
             throw new RuntimeException("Vous n'êtes pas autorisé à modifier cet item");
         }
 
@@ -50,14 +53,14 @@ public class ItemService {
 
         return itemRepository.save(existingItem);
     }
-    public void deleteItem(Long itemId, int userId) {
+    public void deleteItem(Long itemId, int userId, boolean isAdmin) {
         Item item = itemRepository.findById(itemId).orElseThrow();
-        if (item.getSeller().getId() != userId) {
+        // Autoriser la suppression si l'utilisateur est le vendeur OU un admin
+        if (item.getSeller().getId() != userId && !isAdmin) {
             throw new RuntimeException("Vous n'êtes pas autorisé à supprimer cet item");
         }
         itemRepository.delete(item);
     }
-
     public List<Item> getItemsBySeller(int userId) {
         return itemRepository.findBySellerIdAndStatus(userId, ItemStatus.APPROVED);
     }
