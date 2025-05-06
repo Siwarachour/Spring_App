@@ -69,8 +69,9 @@ public class User implements UserDetails, Principal {
     @OneToMany
     private Set<Application> applications;
 
-    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
-    private Cv cv;
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
+    private List<Cv> cvs = new ArrayList<>();
+
 
     // Principal method
     @Override

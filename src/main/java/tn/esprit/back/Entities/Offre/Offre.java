@@ -48,7 +48,6 @@ public class Offre {
     private Set<Application> applications = new HashSet<>();
 
     @CreationTimestamp
-    @JsonIgnore  // This will prevent Jackson from mapping the 'createdAt' field
 
     @Column(name = "created_at", updatable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")

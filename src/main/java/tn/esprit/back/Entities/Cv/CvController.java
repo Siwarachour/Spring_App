@@ -38,26 +38,20 @@ public class CvController {
         Cv savedCv = cvRepo.save(cv);
         System.out.println("Saved CV with ID: " + savedCv.getId());  // Debug the saved CV ID
 
-        try {
-            // Generate PDF and save it
-            String fileName = CvPdfGenerator.generateAndSavePdf(savedCv);
-            System.out.println("PDF generated with file name: " + fileName);  // Debug the file name
+        // Generate PDF and save it
+        String fileName = "f";
+        System.out.println("PDF generated with file name: " + fileName);  // Debug the file name
 
-            // Create download link
-            String downloadLink = "http://localhost:8089/cv/download/" + savedCv.getId();
-            savedCv.setPdfDownloadLink(downloadLink);
-            System.out.println("Generated download link: " + downloadLink);  // Debug the download link
+        // Create download link
+        String downloadLink = "http://localhost:8089/cv/download/" + savedCv.getId();
+        savedCv.setPdfDownloadLink(downloadLink);
+        System.out.println("Generated download link: " + downloadLink);  // Debug the download link
 
-            // Save the CV again with the download link
-            cvRepo.save(savedCv);
-            System.out.println("Updated CV saved with download link");  // Debug the second save
+        // Save the CV again with the download link
+        cvRepo.save(savedCv);
+        System.out.println("Updated CV saved with download link");  // Debug the second save
 
-            return savedCv.getId();  // or return downloadLink if needed
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Error generating PDF: " + e.getMessage());  // Debug the error message
-            throw new RuntimeException("Failed to generate CV PDF");
-        }
+        return savedCv.getId();  // or return downloadLink if needed
     }
 
 

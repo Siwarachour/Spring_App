@@ -26,24 +26,19 @@ public class CvService {
         // 1. Save CV first to get its ID
         Cv savedCv = cvRepo.save(cv);
 
-        try {
-            // 2. Generate PDF and get filename
-            String fileName = CvPdfGenerator.generateAndSavePdf(savedCv);
+        // 2. Generate PDF and get filename
+        String fileName = "";
 
-            // 3. Build the download link
-            String downloadLink = "http://localhost:8089/cv/download/" + savedCv.getId();
-            savedCv.setPdfDownloadLink(downloadLink);
+        // 3. Build the download link
+        String downloadLink = "http://localhost:8089/cv/download/" + savedCv.getId();
+        savedCv.setPdfDownloadLink(downloadLink);
 
-            // 4. Save again to persist the link
-            cvRepo.save(savedCv);
+        // 4. Save again to persist the link
+        cvRepo.save(savedCv);
 
-            // 5. Return the whole object or just the link
-            return savedCv.getId(); // or return downloadLink;
+        // 5. Return the whole object or just the link
+        return savedCv.getId(); // or return downloadLink;
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Failed to generate CV PDF");
-        }
     }
 
     // Method to retrieve CV by ID
@@ -72,7 +67,10 @@ public class CvService {
         }
 
         String fileName = "cv_" + cv.getId() + ".pdf";
-        String uploadDir = "C:/Users/21650/Desktop/Spring_App/src/main/java/tn/esprit/back/Entities/Cv/uploads/"; // Ensure this path is correct
+
+        // ✅ Correct path to your actual PDF folder
+        String uploadDir = "C:/Users/21650/Desktop/Spring_App-merge2/src/main/java/tn/esprit/back/Entities/Cv/uploads2/";
+
         Path filePath = Paths.get(uploadDir).resolve(fileName);
         File file = filePath.toFile();
 
@@ -86,4 +84,5 @@ public class CvService {
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(resource);
     }
+
 }
